@@ -34,13 +34,18 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: "Email and password are required." });
-  const user = await queryOne("SELECT * FROM users WHERE email=$1", [email.trim().toLowerCase()]);
-  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-    return res.status(401).json({ error: "Email or password is incorrect." });
+  try {
+    const user = await queryOne("SELECT * FROM users WHERE email=$1", [email.trim().toLowerCase()]);
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: "Email or password is incorrect." });
+    }
+    const token = signToken(user);
+    res.cookie("token", token, cookieOpts);
+    res.json({ user: publicUser(user) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not sign in. Check the database connection." });
   }
-  const token = signToken(user);
-  res.cookie("token", token, cookieOpts);
-  res.json({ user: publicUser(user) });
 });
 
 router.post("/logout", (_req, res) => {

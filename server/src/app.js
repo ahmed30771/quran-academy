@@ -49,13 +49,23 @@ app.get("/api/health", async (_req, res) => {
 });
 
 app.get("/api/reviews", async (_req, res) => {
-  res.json(await query("SELECT * FROM reviews"));
+  try {
+    res.json(await query("SELECT * FROM reviews"));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not load reviews." });
+  }
 });
 
 app.get("/api/teachers", async (_req, res) => {
-  res.json(
-    await query("SELECT id, name, bio, avatar FROM users WHERE role='teacher' AND status='active'")
-  );
+  try {
+    res.json(
+      await query("SELECT id, name, bio, avatar FROM users WHERE role='teacher' AND status='active'")
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not load teachers." });
+  }
 });
 
 app.use("/api/auth", authRoutes);
@@ -64,5 +74,10 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/dash", dashRoutes);
+
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ error: err.message || "Server error." });
+});
 
 export default app;

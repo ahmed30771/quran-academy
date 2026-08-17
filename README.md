@@ -94,7 +94,7 @@ Commit this repo (including `vercel.json` and the `api` folder) and push to GitH
 1. Go to [vercel.com](https://vercel.com) → **Add New** → **Project**.
 2. Import your GitHub repo.
 3. Leave **Root Directory** as the repo root (not `client`).
-4. Vercel will use `vercel.json` (build `client`, API from `api/index.js`).
+4. Vercel will use `vercel.json` and the root `package.json` (`"type": "module"`) so the API stays ESM.
 
 ### 4. Environment variables
 
