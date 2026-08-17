@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher dashboard — Quran Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="is-dash" data-page="teacher">
+  <div class="dash">
+    <aside class="side" id="side">
+      <div class="side-top">
+        <a class="brand" href="index.html">
+          <img src="assets/icons/logo.svg" alt="">
+          <span>
+            <span class="brand-name">Quran Academy</span>
+            <span class="brand-sub" data-i18n="teacher">Teacher</span>
+          </span>
+        </a>
+        <button class="menu-close" type="button" id="sideClose" aria-label="Close">×</button>
+      </div>
+      <nav>
+        <a class="is-active" href="teacher-dashboard.html" data-i18n="today">Today</a>
+        <a href="#students" data-i18n="students">Students</a>
+        <a href="#homework" data-i18n="homework">Homework</a>
+        <a href="#earnings" data-i18n="summary">Summary</a>
+      </nav>
+      <div class="side-tools">
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" data-set-lang="en">EN</button>
+          <button type="button" data-set-lang="ur">UR</button>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Currency">
+          <button type="button" data-set-currency="pkr">PKR</button>
+          <button type="button" data-set-currency="usd">USD</button>
+        </div>
+      </div>
+      <a class="out" href="index.html" data-i18n="backSite">Back to site</a>
+    </aside>
+    <div class="main-dash">
+      <header class="topbar">
+        <button class="dash-menu btn btn-ghost btn-sm" type="button" id="dashMenu" data-i18n="menu">Menu</button>
+        <label class="search"><input type="search" data-i18n-placeholder="phSearchStudents" placeholder="Search students (demo)"></label>
+        <div class="top-right">
+          <span class="bell">🔔<i></i></span>
+          <div class="who"><span class="avatar" style="width:36px;height:36px;margin:0;font-size:0.9rem">AM</span> Ustadha Amina</div>
+        </div>
+      </header>
+      <div class="dash-body">
+        <div class="kpi" id="earnings">
+          <article class="card"><h4 data-i18n="classesToday">Classes today</h4><p class="num">4</p></article>
+          <article class="card"><h4 data-i18n="activeStudents">Active students</h4><p class="num">18</p></article>
+          <article class="card"><h4 data-i18n="hoursWeek">Hours this week</h4><p class="num">12</p></article>
+          <article class="card"><h4 data-i18n="earnings">Earnings (sample)</h4><p class="num" data-money="420"></p></article>
+        </div>
+        <article class="card">
+          <h3 data-i18n="todaysClasses">Today’s classes</h3>
+          <table class="table">
+            <thead><tr><th data-i18n="thTime">Time</th><th data-i18n="thCourse">Course</th><th data-i18n="thStudent">Student</th><th data-i18n="thStatus">Status</th></tr></thead>
+            <tbody>
+              <tr><td>16:00</td><td data-i18n="cKids">Tajweed for Kids</td><td>Fatima K.</td><td><span class="badge" data-i18n="upcomingBadge">Upcoming</span></td></tr>
+              <tr><td>16:40</td><td data-i18n="cKids">Tajweed for Kids</td><td>Yusuf M.</td><td><span class="badge" data-i18n="upcomingBadge">Upcoming</span></td></tr>
+              <tr><td>18:00</td><td data-i18n="rowHifzRev">Hifz revision</td><td>Omar S.</td><td><span class="badge" data-i18n="upcomingBadge">Upcoming</span></td></tr>
+              <tr><td>20:30</td><td data-i18n="cNazra">Nazra</td><td>Layla H.</td><td><span class="badge" data-i18n="upcomingBadge">Upcoming</span></td></tr>
+            </tbody>
+          </table>
+        </article>
+        <article class="card" id="students">
+          <h3 data-i18n="studentList">Student list · attendance</h3>
+          <p style="color:var(--muted);font-size:0.9rem;margin:0.3rem 0 0.8rem" data-i18n="togglesHint">Toggles are visual only — nothing is saved.</p>
+          <table class="table">
+            <thead><tr><th data-i18n="thStudent">Student</th><th data-i18n="thLevel">Level</th><th data-i18n="thPresent">Present</th></tr></thead>
+            <tbody>
+              <tr><td>Fatima K.</td><td data-i18n="kidsTajweed">Kids Tajweed</td><td><button class="toggle on" type="button"></button></td></tr>
+              <tr><td>Yusuf M.</td><td data-i18n="filterHifz">Hifz</td><td><button class="toggle on" type="button"></button></td></tr>
+              <tr><td>Omar S.</td><td data-i18n="adultNazra">Adult Nazra</td><td><button class="toggle" type="button"></button></td></tr>
+              <tr><td>Layla H.</td><td data-i18n="adultTajweed">Adult Tajweed</td><td><button class="toggle on" type="button"></button></td></tr>
+            </tbody>
+          </table>
+        </article>
+        <article class="card" id="homework">
+          <h3 data-i18n="assignHw">Assign homework</h3>
+          <form class="form" data-toast="Homework assigned (demo). Not saved." data-i18n-toast="toastHw">
+            <label><span data-i18n="fldStudent">Student</span>
+              <select>
+                <option>Fatima K.</option>
+                <option>Yusuf M.</option>
+                <option>Omar S.</option>
+                <option>Layla H.</option>
+              </select>
+            </label>
+            <label><span data-i18n="fldTask">Task</span> <textarea required data-i18n-placeholder="phTask" placeholder="e.g. Revise ayah 1–4 of Al-Mulk, slow recitation."></textarea></label>
+            <button class="btn btn-primary" type="submit" data-i18n="assign">Assign</button>
+          </form>
+        </article>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

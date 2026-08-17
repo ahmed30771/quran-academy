@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student dashboard — Quran Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="is-dash" data-page="student">
+  <div class="dash">
+    <aside class="side" id="side">
+      <div class="side-top">
+        <a class="brand" href="index.html">
+          <img src="assets/icons/logo.svg" alt="">
+          <span>
+            <span class="brand-name">Quran Academy</span>
+            <span class="brand-sub" data-i18n="student">Student</span>
+          </span>
+        </a>
+        <button class="menu-close" type="button" id="sideClose" aria-label="Close">×</button>
+      </div>
+      <nav>
+        <a class="is-active" href="student-dashboard.html" data-i18n="overview">Overview</a>
+        <a href="#schedule" data-i18n="timetable">Timetable</a>
+        <a href="#homework" data-i18n="homework">Homework</a>
+        <a href="#certificate" data-i18n="certificate">Certificate</a>
+        <a href="courses.html" data-i18n="browseCourses">Browse courses</a>
+      </nav>
+      <div class="side-tools">
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" data-set-lang="en">EN</button>
+          <button type="button" data-set-lang="ur">UR</button>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Currency">
+          <button type="button" data-set-currency="pkr">PKR</button>
+          <button type="button" data-set-currency="usd">USD</button>
+        </div>
+      </div>
+      <a class="out" href="index.html" data-i18n="backSite">Back to site</a>
+    </aside>
+    <div class="main-dash">
+      <header class="topbar">
+        <button class="dash-menu btn btn-ghost btn-sm" type="button" id="dashMenu" data-i18n="menu">Menu</button>
+        <label class="search"><input type="search" data-i18n-placeholder="phSearchLessons" placeholder="Search lessons (demo)"></label>
+        <div class="top-right">
+          <span class="bell" aria-label="Notifications">🔔<i></i></span>
+          <div class="who"><span class="avatar" style="width:36px;height:36px;margin:0;font-size:0.9rem">FA</span> Fatima</div>
+        </div>
+      </header>
+      <div class="dash-body">
+        <div class="grid-2">
+          <article class="card">
+            <p class="kicker" data-i18n="salaam">Assalamu alaikum</p>
+            <h2 data-i18n="nextClass">Fatima, your next class is today</h2>
+            <p data-i18n="nextClassP">Tajweed for Kids with Ustadha Amina · 16:00–16:30</p>
+            <div class="btn-row">
+              <button class="btn btn-primary" type="button" data-i18n="joinClass" data-click-toast="toastJoin">Join class</button>
+              <a class="btn btn-ghost" href="https://wa.me/15551234567" target="_blank" rel="noopener" data-i18n="waTeacher">WhatsApp teacher</a>
+            </div>
+          </article>
+          <article class="card cert" id="certificate">
+            <p class="kicker" style="justify-content:center" data-i18n="inProgress">In progress</p>
+            <h3 data-i18n="certCourse">Tajweed Foundations</h3>
+            <p data-i18n="certP">Complete 12 more lessons to unlock a sample certificate preview.</p>
+            <p class="price" style="font-size:1.2rem" data-i18n="lessonsN">8 / 20 lessons</p>
+          </article>
+        </div>
+        <div class="rings">
+          <article class="card ring-wrap">
+            <div class="ring" style="--p:72" data-label="72%"></div>
+            <h3 data-i18n="filterTajweed">Tajweed</h3>
+            <p data-i18n="ringTajweed">Letters and madd practice</p>
+          </article>
+          <article class="card ring-wrap">
+            <div class="ring" style="--p:45" data-label="45%"></div>
+            <h3 data-i18n="memorization">Memorization</h3>
+            <p data-i18n="ringHifz">Juz Amma — short surahs</p>
+          </article>
+          <article class="card ring-wrap">
+            <div class="ring" style="--p:90" data-label="90%"></div>
+            <h3 data-i18n="attendance">Attendance</h3>
+            <p data-i18n="last30">Last 30 days</p>
+          </article>
+        </div>
+        <article class="card" id="schedule">
+          <h3 data-i18n="upcoming">Upcoming timetable</h3>
+          <table class="table">
+            <thead><tr><th data-i18n="thDay">Day</th><th data-i18n="thCourse">Course</th><th data-i18n="thTeacher">Teacher</th><th data-i18n="thTime">Time</th></tr></thead>
+            <tbody>
+              <tr><td data-i18n="dayMon">Mon</td><td data-i18n="cKids">Tajweed for Kids</td><td>Ustadha Amina</td><td>16:00</td></tr>
+              <tr><td data-i18n="dayWed">Wed</td><td data-i18n="rowHifzRev">Hifz revision</td><td>Ustadha Amina</td><td>16:00</td></tr>
+              <tr><td data-i18n="daySat">Sat</td><td data-i18n="cNazra">Nazra</td><td>Ustadh Bilal</td><td>11:00</td></tr>
+            </tbody>
+          </table>
+        </article>
+        <article class="card" id="homework">
+          <h3 data-i18n="assignedHw">Assigned homework</h3>
+          <ul style="display:grid;gap:0.7rem;margin-top:0.8rem">
+            <li class="mini-row"><span data-i18n="hw1">Repeat Surah Al-Fatiha slowly, three times</span><b data-i18n="dueMon">Due Mon</b></li>
+            <li class="mini-row"><span data-i18n="hw2">Practice qaf vs kaf with the worksheet audio</span><b data-i18n="dueWed">Due Wed</b></li>
+            <li class="mini-row"><span data-i18n="hw3">Revise last four ayahs of Al-Ikhlas</span><b data-i18n="dueSat">Due Sat</b></li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

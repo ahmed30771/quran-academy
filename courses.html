@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Courses — Quran Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="courses">
+  <main>
+    <section class="page-hero">
+      <div class="pattern-corner tl"></div>
+      <div class="wrap">
+        <p class="kicker" data-i18n="coursesKicker">Courses</p>
+        <h1 data-i18n="coursesTitle">Choose a track</h1>
+        <p class="lede" data-i18n="coursesLede">Kids or adults. Tajweed, recitation, Hifz, or Arabic basics. Fees below are samples.</p>
+      </div>
+    </section>
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="chips">
+          <button class="chip is-on" type="button" data-filter="all" data-i18n="filterAll">All</button>
+          <button class="chip" type="button" data-filter="kids" data-i18n="filterKids">Kids</button>
+          <button class="chip" type="button" data-filter="adults" data-i18n="filterAdults">Adults</button>
+          <button class="chip" type="button" data-filter="tajweed" data-i18n="filterTajweed">Tajweed</button>
+          <button class="chip" type="button" data-filter="hifz" data-i18n="filterHifz">Hifz</button>
+          <button class="chip" type="button" data-filter="recitation" data-i18n="filterRec">Recitation</button>
+          <button class="chip" type="button" data-filter="arabic" data-i18n="filterArabic">Arabic basics</button>
+        </div>
+        <div class="grid-3">
+          <article class="card course" data-track="kids tajweed">
+            <div class="icon-orb">ت</div>
+            <h3 data-i18n="cKids">Tajweed for Kids</h3>
+            <div class="meta"><span data-i18n="beginner">Beginner</span><span>·</span><span data-i18n="months6">6 months</span><span>·</span><span data-i18n="min30">30 min</span></div>
+            <p class="price"><span data-money="39"></span> <span data-i18n="perMonth">/month sample</span></p>
+            <p data-i18n="cKidsFull">Playful live classes that build correct pronunciation from the first letters.</p>
+            <div class="btn-row">
+              <button class="btn btn-ghost btn-sm" type="button" data-course="tajweed-kids" data-i18n="details">Details</button>
+              <a class="btn btn-primary btn-sm" href="login.html" data-i18n="enroll">Enroll</a>
+            </div>
+          </article>
+          <article class="card course" data-track="adults recitation">
+            <div class="icon-orb">ق</div>
+            <h3 data-i18n="cNazra">Nazra Recitation</h3>
+            <div class="meta"><span data-i18n="beginner">Beginner</span><span>·</span><span data-i18n="months4">4 months</span><span>·</span><span data-i18n="min40">40 min</span></div>
+            <p class="price"><span data-money="49"></span> <span data-i18n="perMonth">/month sample</span></p>
+            <p data-i18n="cNazraFull">Read the Quran fluently with a certified teacher, one-to-one or small group.</p>
+            <div class="btn-row">
+              <button class="btn btn-ghost btn-sm" type="button" data-course="nazra" data-i18n="details">Details</button>
+              <a class="btn btn-primary btn-sm" href="login.html" data-i18n="enroll">Enroll</a>
+            </div>
+          </article>
+          <article class="card course" data-track="adults tajweed">
+            <div class="icon-orb">ن</div>
+            <h3 data-i18n="cAdv">Advanced Tajweed</h3>
+            <div class="meta"><span data-i18n="intermediate">Intermediate</span><span>·</span><span data-i18n="months8">8 months</span><span>·</span><span>45 min</span></div>
+            <p class="price"><span data-money="69"></span> <span data-i18n="perMonth">/month sample</span></p>
+            <p data-i18n="cAdvFull">Rules of noon saakin, madd, and idgham with recitation practice each lesson.</p>
+            <div class="btn-row">
+              <button class="btn btn-ghost btn-sm" type="button" data-course="tajweed-adv" data-i18n="details">Details</button>
+              <a class="btn btn-primary btn-sm" href="login.html" data-i18n="enroll">Enroll</a>
+            </div>
+          </article>
+          <article class="card course" data-track="adults kids hifz">
+            <div class="icon-orb">ح</div>
+            <h3 data-i18n="cHifz">Hifz Track</h3>
+            <div class="meta"><span data-i18n="allLevels">All levels</span><span>·</span><span data-i18n="flexible">Flexible</span><span>·</span><span data-i18n="min4560">45–60 min</span></div>
+            <p class="price"><span data-money="89"></span> <span data-i18n="perMonth">/month sample</span></p>
+            <p data-i18n="cHifzFull">Structured memorization with revision cycles and a personal hifz plan.</p>
+            <div class="btn-row">
+              <button class="btn btn-ghost btn-sm" type="button" data-course="hifz" data-i18n="details">Details</button>
+              <a class="btn btn-primary btn-sm" href="login.html" data-i18n="enroll">Enroll</a>
+            </div>
+          </article>
+          <article class="card course" data-track="adults arabic">
+            <div class="icon-orb">ع</div>
+            <h3 data-i18n="cArabic">Quranic Arabic Basics</h3>
+            <div class="meta"><span data-i18n="beginner">Beginner</span><span>·</span><span data-i18n="months3">3 months</span><span>·</span><span data-i18n="min40">40 min</span></div>
+            <p class="price"><span data-money="45"></span> <span data-i18n="perMonth">/month sample</span></p>
+            <p data-i18n="cArabicFull">Core vocabulary and grammar so the meaning of short surahs becomes clearer.</p>
+            <div class="btn-row">
+              <button class="btn btn-ghost btn-sm" type="button" data-course="arabic" data-i18n="details">Details</button>
+              <a class="btn btn-primary btn-sm" href="login.html" data-i18n="enroll">Enroll</a>
+            </div>
+          </article>
+          <article class="card course" data-track="kids adults recitation">
+            <div class="icon-orb">أ</div>
+            <h3 data-i18n="cFamily">Family Recitation</h3>
+            <div class="meta"><span data-i18n="mixed">Mixed</span><span>·</span><span data-i18n="ongoing">Ongoing</span><span>·</span><span data-i18n="min40">40 min</span></div>
+            <p class="price"><span data-money="59"></span> <span data-i18n="perMonth">/month sample</span></p>
+            <p data-i18n="cFamilyFull">Parents and children share a weekly slot — sibling discount on the Fees page.</p>
+            <div class="btn-row">
+              <button class="btn btn-ghost btn-sm" type="button" data-course="family" data-i18n="details">Details</button>
+              <a class="btn btn-primary btn-sm" href="login.html" data-i18n="enroll">Enroll</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="modal-bg" id="courseModal">
+    <div class="modal">
+      <button class="menu-close modal-x" type="button" data-close aria-label="Close">×</button>
+      <p class="kicker" data-i18n="courseKicker">Course</p>
+      <h3></h3>
+      <p></p>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="login.html" data-i18n="enroll">Enroll</a>
+        <button class="btn btn-ghost" type="button" data-close data-i18n="close">Close</button>
+      </div>
+    </div>
+  </div>
+  <script src="js/i18n.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

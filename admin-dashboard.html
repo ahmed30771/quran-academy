@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin dashboard — Quran Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="is-dash" data-page="admin">
+  <div class="dash">
+    <aside class="side" id="side">
+      <div class="side-top">
+        <a class="brand" href="index.html">
+          <img src="assets/icons/logo.svg" alt="">
+          <span>
+            <span class="brand-name">Quran Academy</span>
+            <span class="brand-sub" data-i18n="admin">Admin</span>
+          </span>
+        </a>
+        <button class="menu-close" type="button" id="sideClose" aria-label="Close">×</button>
+      </div>
+      <nav>
+        <a class="is-active" href="admin-dashboard.html" data-i18n="overview">Overview</a>
+        <a href="#enroll" data-i18n="enrollments">Enrollments</a>
+        <a href="#inbox" data-i18n="inbox">Inbox</a>
+        <a href="#teachers" data-i18n="kpiTeachers">Teachers</a>
+        <a href="#blog" data-i18n="blog">Blog</a>
+      </nav>
+      <div class="side-tools">
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" data-set-lang="en">EN</button>
+          <button type="button" data-set-lang="ur">UR</button>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Currency">
+          <button type="button" data-set-currency="pkr">PKR</button>
+          <button type="button" data-set-currency="usd">USD</button>
+        </div>
+      </div>
+      <a class="out" href="index.html" data-i18n="backSite">Back to site</a>
+    </aside>
+    <div class="main-dash">
+      <header class="topbar">
+        <button class="dash-menu btn btn-ghost btn-sm" type="button" id="dashMenu" data-i18n="menu">Menu</button>
+        <label class="search"><input type="search" data-i18n-placeholder="phSearchAcademy" placeholder="Search academy (demo)"></label>
+        <div class="top-right">
+          <span class="bell">🔔<i></i></span>
+          <div class="who"><span class="avatar" style="width:36px;height:36px;margin:0;font-size:0.9rem">AD</span> Admin</div>
+        </div>
+      </header>
+      <div class="dash-body">
+        <div class="kpi">
+          <article class="card"><h4 data-i18n="kpiStudents">Students</h4><p class="num">128</p></article>
+          <article class="card"><h4 data-i18n="kpiTeachers">Teachers</h4><p class="num">14</p></article>
+          <article class="card"><h4 data-i18n="kpiClasses">Classes this week</h4><p class="num">86</p></article>
+          <article class="card"><h4 data-i18n="kpiInquiries">Inquiries</h4><p class="num">9</p></article>
+        </div>
+        <article class="card" id="enroll">
+          <h3 data-i18n="recentEnroll">Recent enrollments</h3>
+          <table class="table">
+            <thead><tr><th data-i18n="thName">Name</th><th data-i18n="thCourse">Course</th><th data-i18n="thPlan">Plan</th><th data-i18n="thStatus">Status</th></tr></thead>
+            <tbody>
+              <tr><td>Fatima K.</td><td data-i18n="cKids">Tajweed for Kids</td><td data-i18n="standard">Standard</td><td data-i18n="statusActive">Active</td></tr>
+              <tr><td>Omar S.</td><td data-i18n="cNazra">Nazra Recitation</td><td data-i18n="starter">Starter</td><td data-i18n="statusTrial">Trial</td></tr>
+              <tr><td>Yusuf M.</td><td data-i18n="cHifz">Hifz Track</td><td data-i18n="cHifz">Hifz</td><td data-i18n="statusActive">Active</td></tr>
+              <tr><td>Ibrahim N.</td><td data-i18n="cFamily">Family Recitation</td><td data-i18n="starter">Starter</td><td data-i18n="statusPending">Pending</td></tr>
+            </tbody>
+          </table>
+        </article>
+        <div class="grid-2">
+          <article class="card" id="inbox">
+            <h3 data-i18n="contactMsgs">Contact messages</h3>
+            <ul style="display:grid;gap:0.7rem;margin-top:0.8rem">
+              <li class="mini-row"><span data-i18n="msg1">Ayesha R. — trial for two children</span><b data-i18n="today">Today</b></li>
+              <li class="mini-row"><span data-i18n="msg2">Teacher applicant — Qari Hassan</span><b data-i18n="yesterday">Yesterday</b></li>
+              <li class="mini-row"><span data-i18n="msg3">Layla H. — time zone change</span><b data-i18n="dayMon">Mon</b></li>
+            </ul>
+          </article>
+          <article class="card" id="blog">
+            <h3 data-i18n="blogPosts">Blog posts</h3>
+            <p style="color:var(--muted);font-size:0.9rem" data-i18n="viewOnly">View-only in this demo.</p>
+            <ul style="display:grid;gap:0.5rem;margin-top:0.8rem">
+              <li><a href="blog-post.html" data-i18n="p1t">Five Tajweed habits that stick at home</a></li>
+              <li><a href="blog-post.html" data-i18n="p2t">How kids learn Quran online</a></li>
+              <li><a href="blog-post.html" data-i18n="p3t">Teacher spotlight: Ustadha Amina</a></li>
+              <li><a href="blog.html" data-i18n="seeAll">See all posts →</a></li>
+            </ul>
+          </article>
+        </div>
+        <article class="card" id="teachers">
+          <h3 data-i18n="pendingTeachers">Teachers pending approval</h3>
+          <p style="color:var(--muted);font-size:0.9rem;margin:0.3rem 0 0.8rem" data-i18n="approveHint">Approve / decline does not persist after reload.</p>
+          <table class="table">
+            <thead><tr><th data-i18n="thName">Name</th><th data-i18n="thSpecialty">Specialty</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Qari Hassan</td>
+                <td data-i18n="specHifz">Hifz · Adults</td>
+                <td>
+                  <button class="btn btn-primary btn-sm" type="button" data-approve="yes" data-i18n="approve">Approve</button>
+                  <button class="btn btn-ghost btn-sm" type="button" data-approve="no" data-i18n="decline">Decline</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Ustadha Maryam</td>
+                <td data-i18n="kidsTajweed">Kids Tajweed</td>
+                <td>
+                  <button class="btn btn-primary btn-sm" type="button" data-approve="yes" data-i18n="approve">Approve</button>
+                  <button class="btn btn-ghost btn-sm" type="button" data-approve="no" data-i18n="decline">Decline</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Quran Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="login">
+  <main class="auth-page">
+    <div class="auth-card">
+      <p class="kicker" data-i18n="welcome">Welcome</p>
+      <h1 style="font-size:2rem;margin-bottom:0.4rem" data-i18n="signIn">Sign in</h1>
+      <p class="lede" style="margin-bottom:1.2rem" data-i18n="loginLede">Visual login only. Any email and password will open the matching dashboard.</p>
+      <div class="tabs">
+        <button type="button" data-auth="login" class="is-on" data-i18n="login">Login</button>
+        <button type="button" data-auth="register" id="registerTab" data-i18n="register">Register</button>
+      </div>
+      <div class="role-tabs">
+        <button type="button" data-role="student" class="is-on" data-i18n="student">Student</button>
+        <button type="button" data-role="teacher" data-i18n="teacher">Teacher</button>
+        <button type="button" data-role="admin" data-i18n="admin">Admin</button>
+      </div>
+      <form class="form" id="loginForm">
+        <label><span data-i18n="fldEmail">Email</span> <input type="email" required data-i18n-placeholder="phEmail" placeholder="you@example.com"></label>
+        <label><span data-i18n="password">Password</span> <input type="password" required data-i18n-placeholder="phPass" placeholder="Any password"></label>
+        <button class="btn btn-primary" type="submit" data-i18n="enterDash">Enter dashboard</button>
+      </form>
+      <form class="form hidden" id="registerForm">
+        <label><span data-i18n="fullName">Full name</span> <input required data-i18n-placeholder="phName" placeholder="Your name"></label>
+        <label><span data-i18n="fldEmail">Email</span> <input type="email" required data-i18n-placeholder="phEmail" placeholder="you@example.com"></label>
+        <label><span data-i18n="password">Password</span> <input type="password" required data-i18n-placeholder="phPassNew" placeholder="Create a password"></label>
+        <button class="btn btn-gold" type="submit" data-i18n="createAccount">Create account</button>
+      </form>
+      <p class="hint" data-i18n="loginHint">Admin has no public register. Teacher applications appear in the admin inbox as a demo list.</p>
+    </div>
+  </main>
+  <script src="js/i18n.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

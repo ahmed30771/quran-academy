@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Quran Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="contact">
+  <main>
+    <section class="page-hero">
+      <div class="pattern-corner tl"></div>
+      <div class="wrap">
+        <p class="kicker" data-i18n="contactKicker">Contact</p>
+        <h1 data-i18n="contactTitle">Ask about a free trial</h1>
+        <p class="lede" data-i18n="contactLede">This form shows a success message only. It does not send email. Use WhatsApp for a real conversation once you add your number.</p>
+      </div>
+    </section>
+    <section class="section" style="padding-top:0">
+      <div class="wrap contact-grid">
+        <article class="card">
+          <form class="form" data-toast="Message received (demo). Nothing was emailed." data-i18n-toast="toastContact">
+            <label><span data-i18n="fldName">Name</span> <input name="name" required data-i18n-placeholder="phName" placeholder="Your name"></label>
+            <label><span data-i18n="fldEmail">Email</span> <input type="email" name="email" required data-i18n-placeholder="phEmail" placeholder="you@example.com"></label>
+            <label><span data-i18n="fldRole">I am a</span>
+              <select name="role">
+                <option value="student" data-i18n="optStudent">Student / parent</option>
+                <option value="teacher" data-i18n="optTeacher">Teacher</option>
+              </select>
+            </label>
+            <label><span data-i18n="fldMsg">Message</span> <textarea name="message" required data-i18n-placeholder="phMsg" placeholder="Tell us the student’s age, time zone, and what you hope to learn."></textarea></label>
+            <button class="btn btn-primary" type="submit" data-i18n="sendMsg">Send message</button>
+          </form>
+        </article>
+        <aside class="side-info">
+          <h3 data-i18n="reachUs">Reach us</h3>
+          <p data-i18n="hours">Hours (sample): Sunday–Thursday, 10:00–20:00 your local evening slots by arrangement.</p>
+          <div class="row">
+            <p><strong>WhatsApp</strong><br><a href="https://wa.me/15551234567" target="_blank" rel="noopener" data-i18n="phPhone">+1 555 123 4567 (placeholder)</a></p>
+          </div>
+          <div class="row">
+            <p><strong>Email</strong><br>hello@quranacademy.example</p>
+          </div>
+          <div class="row">
+            <p><strong data-i18n="studio">Studio</strong><br><span data-i18n="studioP">Online classrooms. Optional city card: Karachi · remote-first.</span></p>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <script src="js/i18n.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>
