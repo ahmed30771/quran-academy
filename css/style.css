@@ -3,21 +3,24 @@
    ============================================ */
 
 :root {
-  --emerald: #0f3d34;
-  --emerald-mid: #165a4c;
-  --emerald-deep: #0a2a24;
+  /* 3 colors: espresso, gold, ivory — other tokens are tints of these */
+  --espresso: #2b2418;
   --gold: #c9a227;
+  --ivory: #fbf7ec;
+  --emerald: var(--espresso);
+  --emerald-mid: #3f3626;
+  --emerald-deep: #1a1610;
   --gold-soft: #d4af37;
   --gold-pale: #f3e6b8;
-  --cream: #f7f3ea;
-  --card: #fffcf7;
-  --sage: #e8f0ec;
-  --sage-deep: #d5e4dc;
-  --ink: #1c1917;
-  --muted: #5c574e;
-  --line: rgba(15, 61, 52, 0.12);
-  --shadow: 0 12px 32px rgba(15, 61, 52, 0.08);
-  --shadow-sm: 0 4px 16px rgba(15, 61, 52, 0.06);
+  --cream: var(--ivory);
+  --card: var(--ivory);
+  --sage: #efe8d8;
+  --sage-deep: #e2d8c4;
+  --ink: var(--espresso);
+  --muted: #6a6356;
+  --line: rgba(43, 36, 24, 0.12);
+  --shadow: 0 12px 32px rgba(43, 36, 24, 0.08);
+  --shadow-sm: 0 4px 16px rgba(43, 36, 24, 0.06);
   --radius: 1.25rem;
   --radius-sm: 0.75rem;
   --header-h: 76px;
@@ -335,7 +338,7 @@ html[lang="ur"] label {
 
 .section-emerald {
   background: var(--emerald);
-  color: #f4efe4;
+  color: var(--cream);
 }
 
 .section-emerald h2,
@@ -427,7 +430,7 @@ html[lang="ur"] label {
 .btn-primary {
   background: var(--emerald);
   color: #fff;
-  box-shadow: 0 8px 20px rgba(15, 61, 52, 0.18);
+  box-shadow: 0 8px 20px rgba(43, 36, 24, 0.18);
 }
 
 .btn-primary:hover {
@@ -482,7 +485,7 @@ html[lang="ur"] label {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(247, 243, 234, 0.92);
+  background: rgba(251, 247, 236, 0.92);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
   height: var(--header-h);
@@ -630,7 +633,7 @@ html[lang="ur"] label {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(12, 28, 24, 0.4);
+  background: rgba(43, 36, 24, 0.4);
   z-index: 44;
 }
 
@@ -660,9 +663,9 @@ html[lang="ur"] label {
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(10, 42, 36, 0.78) 0%,
-    rgba(10, 42, 36, 0.5) 48%,
-    rgba(10, 42, 36, 0.28) 100%
+    rgba(26, 22, 16, 0.82) 0%,
+    rgba(43, 36, 24, 0.52) 48%,
+    rgba(43, 36, 24, 0.28) 100%
   );
   pointer-events: none;
 }
@@ -681,7 +684,7 @@ html[lang="ur"] label {
 }
 
 .hero-cover .trust-row {
-  color: #f4efe4;
+  color: var(--cream);
 }
 
 .hero-cover .btn-ghost {
@@ -701,9 +704,9 @@ html[lang="ur"] .hero-cover {
 html[lang="ur"] .hero-overlay {
   background: linear-gradient(
     270deg,
-    rgba(10, 42, 36, 0.78) 0%,
-    rgba(10, 42, 36, 0.5) 48%,
-    rgba(10, 42, 36, 0.28) 100%
+    rgba(26, 22, 16, 0.82) 0%,
+    rgba(43, 36, 24, 0.52) 48%,
+    rgba(43, 36, 24, 0.28) 100%
   );
 }
 
@@ -1175,7 +1178,7 @@ html[lang="ur"] .hero-overlay {
   height: 150px;
   border-radius: 14px;
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-mid) 50%, #2a6b5a 100%);
+  background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-mid) 50%, var(--gold) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -1207,7 +1210,7 @@ html[lang="ur"] .hero-overlay {
   height: 200px;
   border-radius: 14px;
   margin-bottom: 1.6rem;
-  background: linear-gradient(135deg, var(--emerald), #2a6b5a);
+  background: linear-gradient(135deg, var(--emerald), var(--gold));
 }
 
 .article p {
@@ -1265,7 +1268,7 @@ textarea:focus {
 
 .side-info {
   background: var(--emerald);
-  color: #f4efe4;
+  color: var(--cream);
   border-radius: var(--radius);
   padding: 1.8rem;
 }
@@ -1627,7 +1630,7 @@ textarea:focus {
 .modal-bg {
   position: fixed;
   inset: 0;
-  background: rgba(12, 28, 24, 0.5);
+  background: rgba(43, 36, 24, 0.5);
   display: none;
   place-items: center;
   z-index: 70;
