@@ -1,0 +1,261 @@
+import { useEffect, useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useApp } from "../context/AppContext";
+import { api } from "../api";
+import { ago, dashPath, initials } from "../helpers";
+
+export default function DashShell({ role, searchPlaceholder, navLinks, children }) {
+  const { t, lang, setLang, currency, setCurrency, user, setUser, ready, showToast } = useApp();
+  const nav = useNavigate();
+  const [side, setSide] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [acctOpen, setAcctOpen] = useState(false);
+  const [notes, setNotes] = useState([]);
+  const [modal, setModal] = useState(null);
+  const [profile, setProfile] = useState({ name: "", email: "", bio: "" });
+  const [settings, setSettings] = useState({
+    privacy: "staff",
+    showEmail: true,
+    emailNotif: true,
+    waNotif: true,
+    password: "",
+  });
+
+  useEffect(() => {
+    document.body.classList.add("is-dash");
+    return () => document.body.classList.remove("is-dash");
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    setProfile({ name: user.name || "", email: user.email || "", bio: user.bio || "" });
+    setSettings((s) => ({
+      ...s,
+      privacy: user.privacy || "staff",
+      showEmail: !!user.showEmail,
+      emailNotif: !!user.emailNotif,
+      waNotif: !!user.waNotif,
+    }));
+    api("/api/dash/me").then(setNotes).catch(() => setNotes([]));
+  }, [user]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setSide(false);
+        setNotesOpen(false);
+        setAcctOpen(false);
+        setModal(null);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  if (!ready) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== role) return <Navigate to={dashPath(user)} replace />;
+
+  const unread = notes.some((n) => !n.is_read);
+  const closeDrops = () => {
+    setNotesOpen(false);
+    setAcctOpen(false);
+  };
+
+  async function logout() {
+    await api("/api/auth/logout", { method: "POST" }).catch(() => {});
+    setUser(null);
+    nav("/login");
+  }
+
+  async function markRead() {
+    await api("/api/dash/read", { method: "POST" }).catch(() => {});
+    setNotes((rows) => rows.map((n) => ({ ...n, is_read: 1 })));
+  }
+
+  async function saveProfile(e) {
+    e.preventDefault();
+    try {
+      const data = await api("/api/profile", { method: "PUT", body: profile });
+      setUser(data.user);
+      setModal(null);
+      showToast(t.toastProfile);
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
+
+  async function saveSettings(e) {
+    e.preventDefault();
+    try {
+      const data = await api("/api/profile/settings", { method: "PUT", body: settings });
+      setUser(data.user);
+      setModal(null);
+      showToast(t.toastSettings);
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
+
+  return (
+    <div className="dash">
+      <div className={`side-backdrop${side ? " open" : ""}`} onClick={() => setSide(false)} />
+      <aside className={`side${side ? " open" : ""}`} id="side">
+        <div className="side-top">
+          <Link className="brand" to="/">
+            <img src="/assets/icons/logo.svg" alt="" />
+            <span>
+              <span className="brand-name">Quran Academy</span>
+              <span className="brand-sub">{t[role]}</span>
+            </span>
+          </Link>
+          <button className="menu-close" type="button" onClick={() => setSide(false)} aria-label="Close">×</button>
+        </div>
+        <nav>
+          {navLinks.map((item, i) =>
+            item.to.startsWith("/") ? (
+              <Link key={item.to} className={i === 0 ? "is-active" : ""} to={item.to}>{item.label}</Link>
+            ) : (
+              <a key={item.to} className={i === 0 ? "is-active" : ""} href={item.to} onClick={() => setSide(false)}>{item.label}</a>
+            )
+          )}
+        </nav>
+        <div className="side-tools">
+          <div className="lang-toggle" role="group" aria-label="Language">
+            <button type="button" className={lang === "en" ? "is-on" : ""} onClick={() => setLang("en")}>EN</button>
+            <button type="button" className={lang === "ur" ? "is-on" : ""} onClick={() => setLang("ur")}>UR</button>
+          </div>
+          <div className="lang-toggle" role="group" aria-label="Currency">
+            <button type="button" className={currency === "pkr" ? "is-on" : ""} onClick={() => setCurrency("pkr")}>PKR</button>
+            <button type="button" className={currency === "usd" ? "is-on" : ""} onClick={() => setCurrency("usd")}>USD</button>
+          </div>
+        </div>
+        <Link className="out" to="/">{t.backSite}</Link>
+      </aside>
+      <div className="main-dash">
+        <header className="topbar">
+          <button className="dash-menu btn btn-ghost btn-sm" type="button" onClick={() => setSide(true)}>{t.menu}</button>
+          <label className="search"><input type="search" placeholder={searchPlaceholder} /></label>
+          <div className="top-right">
+            <div className={`drop${notesOpen ? " open" : ""}`}>
+              <button
+                className={`bell${unread ? "" : " is-read"}`}
+                type="button"
+                aria-label="Notifications"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAcctOpen(false);
+                  setNotesOpen((v) => !v);
+                }}
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M6 9a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9" />
+                  <path d="M10 20a2 2 0 0 0 4 0" />
+                </svg>
+                {unread ? <i /> : null}
+              </button>
+              <div className="drop-panel">
+                <div className="drop-head">
+                  <strong>{t.notifications}</strong>
+                  <button type="button" className="linkish" onClick={markRead}>{t.markRead}</button>
+                </div>
+                <ul className="note-list">
+                  {notes.length ? notes.map((n) => (
+                    <li key={n.id}><span>{n.text}</span><b>{ago(n.created_at)}</b></li>
+                  )) : <li><span>No notifications yet.</span></li>}
+                </ul>
+              </div>
+            </div>
+            <div className={`drop${acctOpen ? " open" : ""}`}>
+              <button
+                className="who"
+                type="button"
+                aria-haspopup="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNotesOpen(false);
+                  setAcctOpen((v) => !v);
+                }}
+              >
+                <span className="avatar dash-avatar">{initials(user.name)}</span>
+                <span>{user.name}</span>
+              </button>
+              <div className="drop-panel drop-menu">
+                <button type="button" onClick={() => { closeDrops(); setModal("profile"); }}>{t.profile}</button>
+                <button type="button" onClick={() => { closeDrops(); setModal("settings"); }}>{t.settings}</button>
+                <button type="button" onClick={logout}>{t.logout}</button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="dash-body" onClick={closeDrops}>
+          {user.status === "pending" ? (
+            <article className="card">
+              <p className="kicker">{t.pendingTeachers}</p>
+              <p>Your teacher account is waiting for admin approval. You can still review this dashboard.</p>
+            </article>
+          ) : null}
+          {children}
+        </div>
+      </div>
+
+      {modal === "profile" ? (
+        <div className="modal-bg open" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
+          <div className="modal">
+            <button className="menu-close modal-x" type="button" onClick={() => setModal(null)}>×</button>
+            <h3>{t.profileTitle}</h3>
+            <form className="form" onSubmit={saveProfile}>
+              <div className="photo-field">
+                <span className="avatar" id="profilePreview">{initials(profile.name)}</span>
+                <label><span>{t.profilePhoto}</span><input type="file" accept="image/*" disabled /></label>
+              </div>
+              <label><span>{t.fullName}</span><input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required /></label>
+              <label><span>{t.fldEmail}</span><input type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} required /></label>
+              <label><span>{t.profileBio}</span><textarea value={profile.bio} placeholder={t.phBio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} /></label>
+              <button className="btn btn-primary" type="submit">{t.saveProfile}</button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {modal === "settings" ? (
+        <div className="modal-bg open" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
+          <div className="modal">
+            <button className="menu-close modal-x" type="button" onClick={() => setModal(null)}>×</button>
+            <h3>{t.settingsTitle}</h3>
+            <form className="form" onSubmit={saveSettings}>
+              <p className="kicker">{t.privacy}</p>
+              <label>
+                <span>{t.privacyWho}</span>
+                <select value={settings.privacy} onChange={(e) => setSettings({ ...settings, privacy: e.target.value })}>
+                  <option value="staff">{t.privacyPublic}</option>
+                  <option value="teachers">{t.privacyTeachers}</option>
+                  <option value="me">{t.privacyPrivate}</option>
+                </select>
+              </label>
+              <div className="setting-row">
+                <span>{t.showEmail}</span>
+                <button className={`toggle${settings.showEmail ? " on" : ""}`} type="button" onClick={() => setSettings({ ...settings, showEmail: !settings.showEmail })} />
+              </div>
+              <p className="kicker" style={{ marginTop: "1rem" }}>{t.notifPrefs}</p>
+              <div className="setting-row">
+                <span>{t.emailNotif}</span>
+                <button className={`toggle${settings.emailNotif ? " on" : ""}`} type="button" onClick={() => setSettings({ ...settings, emailNotif: !settings.emailNotif })} />
+              </div>
+              <div className="setting-row">
+                <span>{t.waNotif}</span>
+                <button className={`toggle${settings.waNotif ? " on" : ""}`} type="button" onClick={() => setSettings({ ...settings, waNotif: !settings.waNotif })} />
+              </div>
+              <p className="kicker" style={{ marginTop: "1rem" }}>{t.accountSec}</p>
+              <label>
+                <span>{t.password}</span>
+                <input type="password" placeholder={t.phNewPass} value={settings.password} onChange={(e) => setSettings({ ...settings, password: e.target.value })} />
+              </label>
+              <button className="btn btn-primary" type="submit">{t.saveSettings}</button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

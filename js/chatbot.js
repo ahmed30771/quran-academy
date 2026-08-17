@@ -86,7 +86,7 @@
   function answer(raw) {
     const q = raw.toLowerCase();
     if (q.includes("human") || q.includes("whatsapp") || q.includes("انسان")) {
-      add(lang === "ur" ? "واٹس ایپ کھل رہا ہے (نمونہ نمبر)…" : "Opening WhatsApp (sample number)…", "bot");
+      add(lang === "ur" ? "واٹس ایپ کھل رہا ہے…" : "Opening WhatsApp…", "bot");
       window.open(QA.WHATSAPP, "_blank", "noopener");
       return;
     }

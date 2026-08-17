@@ -46,8 +46,34 @@
         <button class="dash-menu btn btn-ghost btn-sm" type="button" id="dashMenu" data-i18n="menu">Menu</button>
         <label class="search"><input type="search" data-i18n-placeholder="phSearchAcademy" placeholder="Search academy (demo)"></label>
         <div class="top-right">
-          <span class="bell">🔔<i></i></span>
-          <div class="who"><span class="avatar" style="width:36px;height:36px;margin:0;font-size:0.9rem">AD</span> Admin</div>
+          <div class="drop">
+            <button class="bell" type="button" id="noteBtn" aria-label="Notifications">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+              <i></i>
+            </button>
+            <div class="drop-panel" id="notePanel">
+              <div class="drop-head">
+                <strong data-i18n="notifications">Notifications</strong>
+                <button type="button" class="linkish" id="noteRead" data-i18n="markRead">Mark all read</button>
+              </div>
+              <ul class="note-list">
+                <li><span data-i18n="n1a">New enrollment waiting for review.</span><b data-i18n="nTime1">Just now</b></li>
+                <li><span data-i18n="n2a">Teacher applicant: Qari Hassan.</span><b data-i18n="nTime2">2h ago</b></li>
+                <li><span data-i18n="n3a">Contact message from Ayesha R.</span><b data-i18n="nTime3">Yesterday</b></li>
+              </ul>
+            </div>
+          </div>
+          <div class="drop">
+            <button class="who" type="button" id="acctBtn" aria-haspopup="true">
+              <span class="avatar dash-avatar">AD</span>
+              <span>Admin</span>
+            </button>
+            <div class="drop-panel drop-menu" id="acctPanel">
+              <button type="button" data-open="profile" data-i18n="profile">Profile</button>
+              <button type="button" data-open="settings" data-i18n="settings">Settings</button>
+              <a href="login.html" data-i18n="logout">Log out</a>
+            </div>
+          </div>
         </div>
       </header>
       <div class="dash-body">

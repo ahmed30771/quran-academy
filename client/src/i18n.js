@@ -1,6 +1,4 @@
-window.QA = window.QA || {};
-
-QA.i18n = {
+export const i18n = {
   en: {
     home: "Home",
     about: "About",
@@ -289,7 +287,7 @@ QA.i18n = {
 
     contactKicker: "Contact",
     contactTitle: "Ask about a free trial",
-    contactLede: "Message us on WhatsApp or email. The form below is a demo and does not send mail.",
+    contactLede: "Message us on WhatsApp or email. The form is saved to the academy inbox.",
     fldName: "Name",
     fldEmail: "Email",
     fldRole: "I am a",
@@ -300,7 +298,7 @@ QA.i18n = {
     optStudent: "Student / parent",
     optTeacher: "Teacher",
     sendMsg: "Send message",
-    toastContact: "Message received (demo). Nothing was emailed.",
+    toastContact: "Message received. Our team will see it in the admin inbox.",
     reachUs: "Reach us",
     hours: "Hours: Sunday–Thursday, 10:00–20:00. Evening slots by arrangement.",
     studio: "Studio",
@@ -310,7 +308,7 @@ QA.i18n = {
 
     welcome: "Welcome",
     signIn: "Sign in",
-    loginLede: "Visual login only. Any email and password will open the matching dashboard.",
+    loginLede: "Sign in with your academy email. Demo accounts use password password123.",
     register: "Register",
     student: "Student",
     teacher: "Teacher",
@@ -320,7 +318,7 @@ QA.i18n = {
     phPassNew: "Create a password",
     fullName: "Full name",
     enterDash: "Enter dashboard",
-    loginHint: "Admin has no public register. Teacher applications appear in the admin inbox as a demo list.",
+    loginHint: "Admin has no public register. Teacher accounts wait for admin approval before they can teach.",
 
     overview: "Overview",
     timetable: "Timetable",
@@ -412,7 +410,7 @@ QA.i18n = {
     thLevel: "Level",
     thPresent: "Present",
     assignHw: "Assign homework",
-    toastHw: "Homework assigned (demo). Not saved.",
+    toastHw: "Homework assigned.",
     fldStudent: "Student",
     fldTask: "Task",
     phTask: "e.g. Revise ayah 1–4 of Al-Mulk, slow recitation.",
@@ -738,7 +736,7 @@ QA.i18n = {
 
     contactKicker: "رابطہ",
     contactTitle: "مفت ٹرائل کے بارے میں پوچھیں",
-    contactLede: "واٹس ایپ یا ای میل پر پیغام بھیجیں۔ نیچے والا فارم ڈیمو ہے اور ای میل نہیں بھیجتا۔",
+    contactLede: "واٹس ایپ یا ای میل پر پیغام بھیجیں۔ فارم اکیڈمی ان باکس میں محفوظ ہو جاتا ہے۔",
     fldName: "نام",
     fldEmail: "ای میل",
     fldRole: "میں ہوں",
@@ -749,7 +747,7 @@ QA.i18n = {
     optStudent: "طالب علم / والدین",
     optTeacher: "استاد",
     sendMsg: "پیغام بھیجیں",
-    toastContact: "پیغام مل گیا (ڈیمو)۔ ای میل نہیں گئی۔",
+    toastContact: "پیغام مل گیا۔ ہماری ٹیم اسے ایڈمن ان باکس میں دیکھے گی۔",
     reachUs: "ہم تک پہنچیں",
     hours: "اوقات: اتوار تا جمعرات، ۱۰:۰۰–۲۰:۰۰۔ شام کے سلاٹس بات چیت سے۔",
     studio: "اسٹوڈیو",
@@ -759,7 +757,7 @@ QA.i18n = {
 
     welcome: "خوش آمدید",
     signIn: "سائن اِن",
-    loginLede: "صرف ظاہری لاگ اِن۔ کوئی بھی ای میل اور پاس ورڈ متعلقہ ڈیش بورڈ کھول دے گا۔",
+    loginLede: "اپنی اکیڈمی ای میل سے سائن اِن کریں۔ ڈیمو اکاؤنٹس کا پاس ورڈ password123 ہے۔",
     register: "رجسٹر",
     student: "طالب علم",
     teacher: "استاد",
@@ -769,7 +767,7 @@ QA.i18n = {
     phPassNew: "پاس ورڈ بنائیں",
     fullName: "پورا نام",
     enterDash: "ڈیش بورڈ کھولیں",
-    loginHint: "ایڈمن کا عوامی رجسٹر نہیں۔ استاد کی درخواستیں ایڈمن ان باکس میں ڈیمو فہرست کے طور پر آتی ہیں۔",
+    loginHint: "ایڈمن کا عوامی رجسٹر نہیں۔ استاد کے اکاؤنٹس تدریس سے پہلے ایڈمن کی منظوری کے منتظر رہتے ہیں۔",
 
     overview: "جائزہ",
     timetable: "ٹائم ٹیبل",
@@ -861,7 +859,7 @@ QA.i18n = {
     thLevel: "سطح",
     thPresent: "حاضر",
     assignHw: "ہوم ورک دیں",
-    toastHw: "ہوم ورک دے دیا گیا (ڈیمو)۔ محفوظ نہیں۔",
+    toastHw: "ہوم ورک دے دیا گیا۔",
     fldStudent: "طالب علم",
     fldTask: "کام",
     phTask: "مثلاً الملک کی آیت ۱–۴ آہستہ دہرائیں۔",

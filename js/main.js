@@ -55,32 +55,59 @@
                 <img src="assets/icons/logo.svg" alt="">
                 <span class="brand-name" style="color:#fff">Quran Academy</span>
               </a>
-              <p style="margin-top:0.8rem;max-width:18rem">${t.copyNote}</p>
+              <p style="margin-top:0.8rem;max-width:18rem" data-i18n="copyNote">${t.copyNote}</p>
             </div>
             <div>
-              <h4 data-i18n="explore">${t.explore}</h4>
+              <h4 data-i18n="footCompany">${t.footCompany}</h4>
               <ul>
-                <li><a href="courses.html" data-i18n="courses">${t.courses}</a></li>
-                <li><a href="fees.html" data-i18n="fees">${t.fees}</a></li>
-                <li><a href="blog.html" data-i18n="blog">${t.blog}</a></li>
+                <li><a href="about.html" data-i18n="about">${t.about}</a></li>
+                <li><a href="index.html#how" data-i18n="howKicker">${t.howKicker}</a></li>
+                <li><a href="about.html#teachers" data-i18n="teachKicker">${t.teachKicker}</a></li>
                 <li><a href="login.html" data-i18n="login">${t.login}</a></li>
               </ul>
             </div>
             <div>
-              <h4 data-i18n="academy">${t.academy}</h4>
+              <h4 data-i18n="footPrograms">${t.footPrograms}</h4>
               <ul>
-                <li><a href="about.html" data-i18n="about">${t.about}</a></li>
-                <li><a href="contact.html" data-i18n="contact">${t.contact}</a></li>
-                <li><a href="${QA.WHATSAPP}" target="_blank" rel="noopener">WhatsApp</a></li>
+                <li><a href="courses.html#tajweed-kids" data-i18n="cKids">${t.cKids}</a></li>
+                <li><a href="courses.html#nazra" data-i18n="cNazra">${t.cNazra}</a></li>
+                <li><a href="courses.html#tajweed-adv" data-i18n="cAdv">${t.cAdv}</a></li>
+                <li><a href="courses.html#hifz" data-i18n="cHifz">${t.cHifz}</a></li>
+                <li><a href="courses.html#arabic" data-i18n="cArabic">${t.cArabic}</a></li>
+                <li><a href="fees.html" data-i18n="fees">${t.fees}</a></li>
               </ul>
             </div>
             <div>
-              <h4 data-i18n="prayer">${t.prayer}</h4>
-              <div class="prayer">
-                <div><span>Karachi</span><span>Maghrib 19:12</span></div>
-                <div><span>Lahore</span><span>Maghrib 19:01</span></div>
-                <div><span>Islamabad</span><span>Maghrib 19:05</span></div>
+              <h4 data-i18n="explore">${t.explore}</h4>
+              <ul>
+                <li><a href="index.html" data-i18n="home">${t.home}</a></li>
+                <li><a href="courses.html" data-i18n="courses">${t.courses}</a></li>
+                <li><a href="blog.html" data-i18n="blog">${t.blog}</a></li>
+                <li><a href="index.html#tutorial" data-i18n="tutKicker">${t.tutKicker}</a></li>
+                <li><a href="contact.html" data-i18n="trial">${t.trial}</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 data-i18n="contact">${t.contact}</h4>
+              <ul>
+                <li><a href="${QA.WHATSAPP}" target="_blank" rel="noopener">WhatsApp</a></li>
+                <li><a href="mailto:${QA.EMAIL}">${QA.EMAIL}</a></li>
+                <li><a href="contact.html" data-i18n="footForm">${t.footForm}</a></li>
+              </ul>
+              <div class="socials">
+                <a href="${QA.LINKEDIN}" target="_blank" rel="noopener" aria-label="LinkedIn"><img src="assets/icons/linkedin.svg" alt=""></a>
+                <a href="${QA.INSTAGRAM}" target="_blank" rel="noopener" aria-label="Instagram"><img src="assets/icons/instagram.svg" alt=""></a>
+                <a href="${QA.FACEBOOK}" target="_blank" rel="noopener" aria-label="Facebook"><img src="assets/icons/facebook.svg" alt=""></a>
               </div>
+            </div>
+            <div>
+              <h4 data-i18n="footSupport">${t.footSupport}</h4>
+              <ul>
+                <li><a href="index.html#faq" data-i18n="faqKicker">${t.faqKicker}</a></li>
+                <li><a href="#chat" id="footChat" data-i18n="chatNur">${t.chatNur}</a></li>
+                <li><a href="login.html" data-i18n="studentLogin">${t.studentLogin}</a></li>
+                <li><a href="login.html" data-i18n="teachWithUs">${t.teachWithUs}</a></li>
+              </ul>
             </div>
           </div>
           <div class="copy">
@@ -187,6 +214,25 @@
   if (!document.getElementById("menuBackdrop")) {
     document.body.insertAdjacentHTML("beforeend", '<div class="menu-backdrop" id="menuBackdrop"></div>');
   }
+  const header = document.querySelector(".site-header");
+  if (header) {
+    const syncHeader = () => {
+      const y = window.scrollY || document.documentElement.scrollTop;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      header.classList.toggle("is-scrolled", y > 16);
+      header.style.setProperty("--scroll", (max > 0 ? Math.min(100, (y / max) * 100) : 0) + "%");
+    };
+    window.addEventListener("scroll", syncHeader, { passive: true });
+    syncHeader();
+    header.addEventListener("mousemove", (e) => {
+      const box = header.getBoundingClientRect();
+      header.style.setProperty("--mx", e.clientX - box.left + "px");
+      header.style.setProperty("--my", e.clientY - box.top + "px");
+    });
+    header.addEventListener("mouseenter", () => header.classList.add("is-hot"));
+    header.addEventListener("mouseleave", () => header.classList.remove("is-hot"));
+  }
+
   const backdrop = document.getElementById("menuBackdrop");
   const menuBtn = document.getElementById("menuBtn");
   const nav = document.getElementById("nav");
@@ -230,6 +276,13 @@
     e.stopPropagation();
     closeMenus();
   });
+  document.getElementById("footChat")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenus();
+    chatEl()?.classList.add("open");
+    syncMenus();
+  });
   backdrop?.addEventListener("click", closeMenus);
   document.addEventListener("click", (e) => {
     const target = e.target;
@@ -249,6 +302,9 @@
     if (e.key !== "Escape") return;
     closeMenus();
     document.getElementById("courseModal")?.classList.remove("open");
+    document.querySelectorAll(".drop.open").forEach((d) => d.classList.remove("open"));
+    document.getElementById("profileModal")?.classList.remove("open");
+    document.getElementById("settingsModal")?.classList.remove("open");
   });
 
   document.querySelectorAll("[data-set-lang]").forEach((btn) => {
@@ -403,4 +459,119 @@
   modalBg?.addEventListener("click", (e) => {
     if (e.target === modalBg || e.target.closest("[data-close]")) modalBg.classList.remove("open");
   });
+
+  if (isDash) {
+    const name = (document.querySelector("#acctBtn span:not(.avatar)")?.textContent || "").trim();
+    const emailMap = { student: "fatima@quranacademy.example", teacher: "amina@quranacademy.example", admin: "admin@quranacademy.example" };
+    const email = emailMap[page] || "";
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<div class="modal-bg" id="profileModal">
+        <div class="modal">
+          <button class="menu-close modal-x" type="button" data-close aria-label="Close">×</button>
+          <h3 data-i18n="profileTitle">${t.profileTitle}</h3>
+          <form class="form" id="profileForm">
+            <div class="photo-field">
+              <span class="avatar" id="profilePreview">${document.querySelector(".dash-avatar")?.textContent || ""}</span>
+              <label><span data-i18n="profilePhoto">${t.profilePhoto}</span>
+                <input type="file" id="profilePhoto" accept="image/*">
+              </label>
+            </div>
+            <label><span data-i18n="fullName">${t.fullName}</span><input name="name" value="${name}" required></label>
+            <label><span data-i18n="fldEmail">${t.fldEmail}</span><input type="email" name="email" value="${email}" required></label>
+            <label><span data-i18n="profileBio">${t.profileBio}</span><textarea name="bio" data-i18n-placeholder="phBio" placeholder="${t.phBio}"></textarea></label>
+            <button class="btn btn-primary" type="submit" data-i18n="saveProfile">${t.saveProfile}</button>
+          </form>
+        </div>
+      </div>
+      <div class="modal-bg" id="settingsModal">
+        <div class="modal">
+          <button class="menu-close modal-x" type="button" data-close aria-label="Close">×</button>
+          <h3 data-i18n="settingsTitle">${t.settingsTitle}</h3>
+          <form class="form" id="settingsForm">
+            <p class="kicker" data-i18n="privacy">${t.privacy}</p>
+            <label><span data-i18n="privacyWho">${t.privacyWho}</span>
+              <select name="privacy">
+                <option value="staff" data-i18n="privacyPublic">${t.privacyPublic}</option>
+                <option value="teachers" data-i18n="privacyTeachers">${t.privacyTeachers}</option>
+                <option value="me" data-i18n="privacyPrivate">${t.privacyPrivate}</option>
+              </select>
+            </label>
+            <div class="setting-row"><span data-i18n="showEmail">${t.showEmail}</span><button class="toggle on" type="button"></button></div>
+            <p class="kicker" style="margin-top:1rem" data-i18n="notifPrefs">${t.notifPrefs}</p>
+            <div class="setting-row"><span data-i18n="emailNotif">${t.emailNotif}</span><button class="toggle on" type="button"></button></div>
+            <div class="setting-row"><span data-i18n="waNotif">${t.waNotif}</span><button class="toggle on" type="button"></button></div>
+            <p class="kicker" style="margin-top:1rem" data-i18n="accountSec">${t.accountSec}</p>
+            <label><span data-i18n="password">${t.password}</span><input type="password" data-i18n-placeholder="phNewPass" placeholder="${t.phNewPass}"></label>
+            <button class="btn btn-primary" type="submit" data-i18n="saveSettings">${t.saveSettings}</button>
+          </form>
+        </div>
+      </div>`
+    );
+    applyI18n();
+
+    const closeDrops = (except) => {
+      document.querySelectorAll(".drop.open").forEach((d) => {
+        if (d !== except) d.classList.remove("open");
+      });
+    };
+    const bindDrop = (btnId) => {
+      const btn = document.getElementById(btnId);
+      const drop = btn?.closest(".drop");
+      btn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const willOpen = !drop.classList.contains("open");
+        closeDrops();
+        if (willOpen) drop.classList.add("open");
+      });
+    };
+    bindDrop("noteBtn");
+    bindDrop("acctBtn");
+    document.addEventListener("click", () => closeDrops());
+    document.getElementById("noteRead")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      document.getElementById("noteBtn")?.classList.add("is-read");
+    });
+    const openModal = (id) => {
+      closeDrops();
+      document.getElementById(id)?.classList.add("open");
+    };
+    document.querySelectorAll("[data-open]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openModal(btn.dataset.open === "profile" ? "profileModal" : "settingsModal");
+      });
+    });
+    ["profileModal", "settingsModal"].forEach((id) => {
+      const el = document.getElementById(id);
+      el?.addEventListener("click", (e) => {
+        if (e.target === el || e.target.closest("[data-close]")) el.classList.remove("open");
+      });
+    });
+    document.getElementById("profilePhoto")?.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      document.querySelectorAll(".dash-avatar, #profilePreview").forEach((av) => {
+        av.style.backgroundImage = `url("${url}")`;
+        av.textContent = "";
+      });
+    });
+    document.getElementById("profileForm")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const next = e.target.name.value;
+      const label = document.querySelector("#acctBtn span:not(.avatar)");
+      if (label) label.textContent = next;
+      document.getElementById("profileModal")?.classList.remove("open");
+      qaToast(t.toastProfile);
+    });
+    document.getElementById("settingsForm")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      document.getElementById("settingsModal")?.classList.remove("open");
+      qaToast(t.toastSettings);
+    });
+    document.querySelectorAll("#settingsForm .toggle").forEach((btn) => {
+      btn.addEventListener("click", () => btn.classList.toggle("on"));
+    });
+  }
 })();

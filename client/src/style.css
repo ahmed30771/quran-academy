@@ -413,7 +413,7 @@ html[lang="ur"] label {
   position: absolute;
   width: 180px;
   height: 180px;
-  background: url("../assets/icons/pattern.svg") center / contain no-repeat;
+  background: url("/assets/icons/pattern.svg") center / contain no-repeat;
   opacity: 0.55;
   pointer-events: none;
 }
@@ -752,7 +752,7 @@ html[lang="ur"] label {
   align-items: center;
   padding: 5.5rem 0 5rem;
   background:
-    url("../assets/hero-cover.png") center 42% / cover no-repeat;
+    url("/assets/hero-cover.png") center 42% / cover no-repeat;
   color: #fff;
 }
 
@@ -1237,7 +1237,7 @@ html[lang="ur"] .hero-overlay {
   content: "";
   position: absolute;
   inset: 0;
-  background: url("../assets/icons/pattern.svg") right bottom / 140px no-repeat;
+  background: url("/assets/icons/pattern.svg") right bottom / 140px no-repeat;
   opacity: 0.5;
 }
 
@@ -2128,6 +2128,10 @@ textarea:focus {
   padding: 1.6rem;
 }
 
+.side-backdrop {
+  display: none;
+}
+
 .dash-menu {
   display: none;
 }
@@ -2224,6 +2228,14 @@ textarea:focus {
 
   .dash-menu {
     display: block;
+  }
+
+  .side-backdrop.open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 36, 24, 0.45);
+    z-index: 55;
   }
 
   .side {

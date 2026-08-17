@@ -1,0 +1,92 @@
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  role VARCHAR(16) NOT NULL DEFAULT 'student' CHECK (role IN ('student','teacher','admin')),
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(160) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  avatar VARCHAR(255),
+  bio TEXT,
+  privacy VARCHAR(32) NOT NULL DEFAULT 'staff',
+  show_email BOOLEAN NOT NULL DEFAULT TRUE,
+  email_notif BOOLEAN NOT NULL DEFAULT TRUE,
+  wa_notif BOOLEAN NOT NULL DEFAULT TRUE,
+  status VARCHAR(32) NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS courses (
+  id VARCHAR(64) PRIMARY KEY,
+  title VARCHAR(160) NOT NULL,
+  track VARCHAR(120) NOT NULL,
+  level VARCHAR(64) NOT NULL,
+  duration VARCHAR(64) NOT NULL,
+  length VARCHAR(64) NOT NULL,
+  price_usd NUMERIC(8,2) NOT NULL,
+  blurb TEXT,
+  full_blurb TEXT,
+  icon VARCHAR(8)
+);
+
+CREATE TABLE IF NOT EXISTS enrollments (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  course_id VARCHAR(64) NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  plan VARCHAR(64) NOT NULL DEFAULT 'standard',
+  status VARCHAR(32) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, course_id)
+);
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(160) NOT NULL,
+  role VARCHAR(32) NOT NULL DEFAULT 'student',
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id VARCHAR(64) PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  date_label VARCHAR(64) NOT NULL,
+  tag VARCHAR(64) NOT NULL,
+  excerpt TEXT,
+  body TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS reviews (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  country VARCHAR(80) NOT NULL,
+  stars SMALLINT NOT NULL DEFAULT 5,
+  text TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS classes (
+  id SERIAL PRIMARY KEY,
+  course_id VARCHAR(64) NOT NULL REFERENCES courses(id),
+  teacher_id INTEGER NOT NULL REFERENCES users(id),
+  student_id INTEGER REFERENCES users(id),
+  day_label VARCHAR(32) NOT NULL,
+  time_label VARCHAR(32) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS homework (
+  id SERIAL PRIMARY KEY,
+  teacher_id INTEGER NOT NULL REFERENCES users(id),
+  student_id INTEGER NOT NULL REFERENCES users(id),
+  task TEXT NOT NULL,
+  due_label VARCHAR(64) NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'open',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  text VARCHAR(255) NOT NULL,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

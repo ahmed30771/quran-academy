@@ -1,6 +1,11 @@
 window.QA = window.QA || {};
 
-QA.WHATSAPP = "https://wa.me/15551234567";
+QA.WHATSAPP = "https://wa.me/923092547332";
+QA.EMAIL = "support@bluexech.com";
+QA.LINKEDIN = "https://www.linkedin.com/company/bluexech-ai";
+QA.INSTAGRAM = "https://www.instagram.com/bluexech_ai/";
+QA.FACEBOOK = "https://www.facebook.com/people/Bluexech-AI/61586923501415/";
+QA.PHONE = "+92 309 2547332";
 QA.USD_TO_PKR = 280;
 
 QA.courses = [
