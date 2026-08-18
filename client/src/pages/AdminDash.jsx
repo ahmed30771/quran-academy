@@ -116,7 +116,7 @@ export default function AdminDash() {
       image_url: form.image_url || null,
     };
     try {
-      if (editing) await api(`/api/courses/${editing}`, { method: "PUT", body });
+      if (editing) await api(`/api/courses/${encodeURIComponent(editing)}/save`, { method: "POST", body });
       else await api("/api/courses", { method: "POST", body });
       showToast(t.saveCourse);
       setForm(emptyCourse());
@@ -130,7 +130,7 @@ export default function AdminDash() {
 
   async function toggleCourse(c) {
     try {
-      await api(`/api/courses/${c.id}/status`, { method: "PATCH", body: { status: c.status === "active" ? "inactive" : "active" } });
+      await api(`/api/courses/${encodeURIComponent(c.id || c.slug)}/status`, { method: "PATCH", body: { status: c.status === "active" ? "inactive" : "active" } });
       load();
     } catch (err) {
       showToast(err.message);
@@ -147,7 +147,7 @@ export default function AdminDash() {
   }
 
   function editCourse(c) {
-    setEditing(c.id);
+    setEditing(c.id || c.slug);
     setErrors({});
     setForm({
       title: c.title || "",
