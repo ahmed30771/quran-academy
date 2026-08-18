@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import DashShell from "../components/DashShell";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
-import { COVER_MAX_BYTES, readCoverAsDataUrl } from "../helpers";
+import { readCoverAsDataUrl } from "../helpers";
 
 function emptyCourse() {
   return {
@@ -304,10 +304,6 @@ export default function AdminDash() {
   async function onImage(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > COVER_MAX_BYTES) {
-      setErrors((prev) => ({ ...prev, image_url: t.errCourseImage }));
-      return;
-    }
     try {
       const image_url = await readCoverAsDataUrl(file);
       setForm((f) => ({ ...f, image_url }));
@@ -320,10 +316,6 @@ export default function AdminDash() {
   async function onPostImage(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > COVER_MAX_BYTES) {
-      setPostErrors((prev) => ({ ...prev, image_url: t.errCourseImage }));
-      return;
-    }
     try {
       const image_url = await readCoverAsDataUrl(file);
       setPostForm((f) => ({ ...f, image_url }));
