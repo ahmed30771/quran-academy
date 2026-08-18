@@ -2138,7 +2138,7 @@ textarea.is-invalid,
   display: grid;
   gap: 1.2rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .dash-glow {
@@ -2239,8 +2239,10 @@ textarea.is-invalid,
 
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.9rem;
+  overflow: visible;
 }
 
 .table th,
@@ -2262,6 +2264,11 @@ textarea.is-invalid,
   position: relative;
   display: flex;
   justify-content: flex-end;
+  z-index: 2;
+}
+
+.row-menu.is-up {
+  z-index: 6;
 }
 
 .row-menu-btn {
@@ -2280,13 +2287,19 @@ textarea.is-invalid,
   position: absolute;
   inset-inline-end: 0;
   top: calc(100% + 4px);
-  z-index: 20;
+  z-index: 40;
   min-width: 170px;
   padding: 0.35rem;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 10px 24px rgba(43, 36, 24, 0.12);
+}
+
+.row-menu.is-up .row-menu-list,
+.table tbody tr:last-child .row-menu-list {
+  top: auto;
+  bottom: calc(100% + 4px);
 }
 
 .row-menu-list button {

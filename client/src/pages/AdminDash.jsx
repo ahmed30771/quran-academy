@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import DashShell from "../components/DashShell";
 import { useApp } from "../context/AppContext";
@@ -26,6 +26,42 @@ function emptyCourse() {
     status: "active",
     image_url: "",
   };
+}
+
+function RowMenu({ open, onToggle, label, children }) {
+  const ref = useRef(null);
+  const [up, setUp] = useState(false);
+
+  useLayoutEffect(() => {
+    if (!open || !ref.current) {
+      setUp(false);
+      return;
+    }
+    const rect = ref.current.getBoundingClientRect();
+    setUp(window.innerHeight - rect.bottom < 180);
+  }, [open]);
+
+  return (
+    <div className={`row-menu${open && up ? " is-up" : ""}`} ref={ref}>
+      <button
+        className="row-menu-btn"
+        type="button"
+        aria-label={label}
+        aria-expanded={open}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+      >
+        ⋯
+      </button>
+      {open ? (
+        <div className="row-menu-list" onClick={(e) => e.stopPropagation()}>
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function Field({ label, error, children }) {
@@ -543,26 +579,15 @@ export default function AdminDash() {
                     <td>{Number(c.price_usd) > 0 ? formatMoney(c.price_usd, currency) : "—"}</td>
                     <td>{c.status === "active" ? t.courseActive : t.courseInactive}</td>
                     <td>
-                      <div className="row-menu">
-                        <button
-                          className="row-menu-btn"
-                          type="button"
-                          aria-label="Course actions"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setMenuId(menuId === c.id ? "" : c.id);
-                          }}
-                        >
-                          ⋯
-                        </button>
-                        {menuId === c.id ? (
-                          <div className="row-menu-list" onClick={(e) => e.stopPropagation()}>
-                            <button type="button" onClick={() => toggleCourse(c)}>{c.status === "active" ? t.deactivate : t.activate}</button>
-                            <button type="button" onClick={() => editCourse(c)}>{t.editCourse}</button>
-                            <button type="button" className="is-danger" onClick={() => deleteCourse(c)}>{t.deleteCourse}</button>
-                          </div>
-                        ) : null}
-                      </div>
+                      <RowMenu
+                        open={menuId === c.id}
+                        label="Course actions"
+                        onToggle={() => setMenuId(menuId === c.id ? "" : c.id)}
+                      >
+                        <button type="button" onClick={() => toggleCourse(c)}>{c.status === "active" ? t.deactivate : t.activate}</button>
+                        <button type="button" onClick={() => editCourse(c)}>{t.editCourse}</button>
+                        <button type="button" className="is-danger" onClick={() => deleteCourse(c)}>{t.deleteCourse}</button>
+                      </RowMenu>
                     </td>
                   </tr>
                 ))}
@@ -609,25 +634,14 @@ export default function AdminDash() {
                     <td><Link to={`/blog/${p.id}`}>{p.title}</Link></td>
                     <td>{p.tag}</td>
                     <td>
-                      <div className="row-menu">
-                        <button
-                          className="row-menu-btn"
-                          type="button"
-                          aria-label="Post actions"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPostMenuId(postMenuId === p.id ? "" : p.id);
-                          }}
-                        >
-                          ⋯
-                        </button>
-                        {postMenuId === p.id ? (
-                          <div className="row-menu-list" onClick={(e) => e.stopPropagation()}>
-                            <button type="button" onClick={() => editPost(p)}>{t.editPost}</button>
-                            <button type="button" className="is-danger" onClick={() => deletePost(p)}>{t.deletePost}</button>
-                          </div>
-                        ) : null}
-                      </div>
+                      <RowMenu
+                        open={postMenuId === p.id}
+                        label="Post actions"
+                        onToggle={() => setPostMenuId(postMenuId === p.id ? "" : p.id)}
+                      >
+                        <button type="button" onClick={() => editPost(p)}>{t.editPost}</button>
+                        <button type="button" className="is-danger" onClick={() => deletePost(p)}>{t.deletePost}</button>
+                      </RowMenu>
                     </td>
                   </tr>
                 ))}
