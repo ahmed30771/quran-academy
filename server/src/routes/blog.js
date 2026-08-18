@@ -27,12 +27,13 @@ function postPayload(body = {}) {
     tag: String(body.tag || "").trim().slice(0, 64),
     excerpt: String(body.excerpt || "").trim(),
     body: String(body.body || "").trim(),
+    image_url: body.image_url ? String(body.image_url) : null,
   };
 }
 
 router.get("/", async (_req, res) => {
   try {
-    res.json(await query("SELECT id, title, date_label, tag, excerpt, created_at FROM blog_posts ORDER BY created_at DESC"));
+    res.json(await query("SELECT id, title, date_label, tag, excerpt, image_url, created_at FROM blog_posts ORDER BY created_at DESC"));
   } catch (err) {
     fail(res, err, "Could not load posts.");
   }
@@ -45,12 +46,15 @@ router.post("/", authRequired, requireRole("admin"), async (req, res) => {
     if (!data.tag) return res.status(400).json({ error: "Please enter a tag." });
     if (!data.excerpt) return res.status(400).json({ error: "Please enter a short excerpt." });
     if (!data.body) return res.status(400).json({ error: "Please write the post." });
+    if (data.image_url && data.image_url.length > 1400000) {
+      return res.status(413).json({ error: "Image is too large. Please use a file under 1 MB." });
+    }
     const exists = await queryOne("SELECT id FROM blog_posts WHERE id=$1", [data.slug]);
     if (exists) return res.status(409).json({ error: "A post with this title already exists." });
     const row = await queryOne(
-      `INSERT INTO blog_posts (id, title, date_label, tag, excerpt, body)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [data.slug, data.title, data.date_label, data.tag, data.excerpt, data.body]
+      `INSERT INTO blog_posts (id, title, date_label, tag, excerpt, body, image_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [data.slug, data.title, data.date_label, data.tag, data.excerpt, data.body, data.image_url]
     );
     await recordAudit(req.user.id, "blog.create", "blog", row.id, { title: row.title });
     res.json(row);
@@ -68,10 +72,13 @@ router.post("/:id/save", authRequired, requireRole("admin"), async (req, res) =>
     if (!data.tag) return res.status(400).json({ error: "Please enter a tag." });
     if (!data.excerpt) return res.status(400).json({ error: "Please enter a short excerpt." });
     if (!data.body) return res.status(400).json({ error: "Please write the post." });
+    if (data.image_url && data.image_url.length > 1400000) {
+      return res.status(413).json({ error: "Image is too large. Please use a file under 1 MB." });
+    }
     const row = await queryOne(
-      `UPDATE blog_posts SET title=$1, date_label=$2, tag=$3, excerpt=$4, body=$5
-       WHERE id=$6 RETURNING *`,
-      [data.title, data.date_label, data.tag, data.excerpt, data.body, post.id]
+      `UPDATE blog_posts SET title=$1, date_label=$2, tag=$3, excerpt=$4, body=$5, image_url=$6
+       WHERE id=$7 RETURNING *`,
+      [data.title, data.date_label, data.tag, data.excerpt, data.body, data.image_url, post.id]
     );
     await recordAudit(req.user.id, "blog.update", "blog", post.id, { title: row.title });
     res.json(row);

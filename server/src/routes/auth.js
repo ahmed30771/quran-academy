@@ -7,6 +7,7 @@ import { signToken, publicUser, cookieOpts, readToken } from "../middleware/auth
 import { recordAudit } from "../middleware/ownership.js";
 import { normalizeName, validatePersonName, validateEmail, validatePassword } from "../validate.js";
 import { sendMail } from "../mail.js";
+import { isAdminEmail } from "../admins.js";
 
 const router = express.Router();
 const ROUNDS = 12;
@@ -34,6 +35,9 @@ router.post("/register", async (req, res) => {
   }
   if (gender !== "male" && gender !== "female") {
     return res.status(400).json({ error: "Please select gender." });
+  }
+  if (isAdminEmail(email)) {
+    return res.status(409).json({ error: "That email is already registered." });
   }
   const chosen = role === "teacher" ? "teacher" : "student";
   const langs = chosen === "teacher" && ["urdu", "english", "both"].includes(teachingLanguages) ? teachingLanguages : null;
@@ -83,9 +87,13 @@ router.post("/login", async (req, res) => {
   const emailErr = validateEmail(email);
   if (emailErr || !password) return res.status(400).json({ error: emailErr || "Email and password are required." });
   try {
-    const user = await queryOne("SELECT * FROM users WHERE email=$1", [String(email).trim().toLowerCase()]);
+    const emailNorm = String(email).trim().toLowerCase();
+    let user = await queryOne("SELECT * FROM users WHERE email=$1", [emailNorm]);
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: "Email or password is incorrect." });
+    }
+    if (isAdminEmail(emailNorm) && user.role !== "admin") {
+      user = await queryOne("UPDATE users SET role='admin', status='active', updated_at=NOW() WHERE id=$1 RETURNING *", [user.id]);
     }
     await query("UPDATE users SET last_login=NOW(), updated_at=NOW() WHERE id=$1", [user.id]);
     await recordAudit(user.id, "user.login", "user", user.id, { role: user.role });

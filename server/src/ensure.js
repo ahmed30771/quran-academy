@@ -1,4 +1,5 @@
 import { query } from "./db.js";
+import { ensureAdminAccounts } from "./admins.js";
 
 export async function ensureCourseSchema() {
   await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(16)");
@@ -18,6 +19,7 @@ export async function ensureCourseSchema() {
   await query("ALTER TABLE courses ADD COLUMN IF NOT EXISTS frequency TEXT");
   await query("ALTER TABLE courses ADD COLUMN IF NOT EXISTS requirements TEXT");
   await query("ALTER TABLE courses ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0");
+  await query("ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS image_url TEXT");
   await query("UPDATE courses SET slug = id WHERE slug IS NULL OR slug = ''");
   await query("CREATE UNIQUE INDEX IF NOT EXISTS courses_slug_idx ON courses (slug)");
   await query(`
@@ -57,6 +59,7 @@ export async function ensureCourseSchema() {
       c
     );
   }
+  await ensureAdminAccounts();
 }
 
 let ready;
