@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
 import { ago, dashPath, initials } from "../helpers";
 
-export default function DashShell({ role, searchPlaceholder, navLinks, children }) {
+export default function DashShell({ role, searchPlaceholder, navLinks, activeKey, onNavChange, children }) {
   const { t, lang, setLang, currency, setCurrency, user, setUser, ready, showToast } = useApp();
   const nav = useNavigate();
   const [side, setSide] = useState(false);
@@ -55,6 +55,19 @@ export default function DashShell({ role, searchPlaceholder, navLinks, children 
   if (!ready) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== role) return <Navigate to={dashPath(user)} replace />;
+
+  const menuLinks = useMemo(
+    () =>
+      navLinks.map((item, i) => ({
+        ...item,
+        kind: item.to?.startsWith("/") ? "route" : item.key ? "section" : "link",
+        active:
+          item.key
+            ? activeKey === item.key
+            : i === 0 && !activeKey,
+      })),
+    [activeKey, navLinks]
+  );
 
   const unread = notes.some((n) => !n.is_read);
   const closeDrops = () => {
@@ -112,13 +125,35 @@ export default function DashShell({ role, searchPlaceholder, navLinks, children 
           <button className="menu-close" type="button" onClick={() => setSide(false)} aria-label="Close">×</button>
         </div>
         <nav>
-          {navLinks.map((item, i) =>
-            item.to.startsWith("/") ? (
-              <Link key={item.to} className={i === 0 ? "is-active" : ""} to={item.to}>{item.label}</Link>
-            ) : (
-              <a key={item.to} className={i === 0 ? "is-active" : ""} href={item.to} onClick={() => setSide(false)}>{item.label}</a>
-            )
-          )}
+          {menuLinks.map((item) => {
+            if (item.kind === "route") {
+              return (
+                <Link key={item.label + item.to} className={item.active ? "is-active" : ""} to={item.to} onClick={() => setSide(false)}>
+                  {item.label}
+                </Link>
+              );
+            }
+            if (item.kind === "section") {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={item.active ? "is-active" : ""}
+                  onClick={() => {
+                    onNavChange?.(item.key);
+                    setSide(false);
+                  }}
+                >
+                  {item.label}
+                </button>
+              );
+            }
+            return (
+              <a key={item.label + item.to} className={item.active ? "is-active" : ""} href={item.to} onClick={() => setSide(false)}>
+                {item.label}
+              </a>
+            );
+          })}
         </nav>
         <div className="side-tools">
           <div className="lang-toggle" role="group" aria-label="Language">
@@ -195,6 +230,8 @@ export default function DashShell({ role, searchPlaceholder, navLinks, children 
               <p>Your teacher account is waiting for admin approval. You can still review this dashboard.</p>
             </article>
           ) : null}
+          <div className="dash-glow dash-glow-a" />
+          <div className="dash-glow dash-glow-b" />
           {children}
         </div>
       </div>

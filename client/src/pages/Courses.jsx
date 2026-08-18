@@ -9,6 +9,7 @@ export default function Courses() {
   const [courses, setCourses] = useState([]);
   const [filter, setFilter] = useState("all");
   const [modal, setModal] = useState(null);
+  const [busyId, setBusyId] = useState("");
 
   useEffect(() => {
     api("/api/courses").then(setCourses).catch(() => setCourses([]));
@@ -24,11 +25,14 @@ export default function Courses() {
       return;
     }
     try {
+      setBusyId(id);
       const res = await api(`/api/courses/${id}/enroll`, { method: "POST", body: { plan: "standard" } });
-      showToast(res.already ? "You are already enrolled in this course." : "Enrollment request sent.");
+      showToast(res.already ? "You are already enrolled in this course." : `Enrollment request sent for ${res.course?.title || "this course"}.`);
       setModal(null);
     } catch (e) {
       showToast(e.message);
+    } finally {
+      setBusyId("");
     }
   }
 
@@ -71,7 +75,7 @@ export default function Courses() {
                 <p>{t[full[c.id]] || c.full_blurb}</p>
                 <div className="btn-row">
                   <button className="btn btn-ghost btn-sm" type="button" onClick={() => setModal(c)}>{t.details}</button>
-                  <button className="btn btn-primary btn-sm" type="button" onClick={() => enroll(c.id)}>{t.enroll}</button>
+                  <button className="btn btn-primary btn-sm" type="button" disabled={busyId === c.id} onClick={() => enroll(c.id)}>{busyId === c.id ? "Sending..." : t.enroll}</button>
                 </div>
               </article>
             ))}
@@ -86,7 +90,7 @@ export default function Courses() {
             <h3>{t[keys[modal.id]] || modal.title}</h3>
             <p>{(t[full[modal.id]] || modal.full_blurb) + " " + (t.modalFee || "").replace("{n}", formatMoney(modal.price_usd, currency))}</p>
             <div className="btn-row">
-              <button className="btn btn-primary" type="button" onClick={() => enroll(modal.id)}>{t.enroll}</button>
+              <button className="btn btn-primary" type="button" disabled={busyId === modal.id} onClick={() => enroll(modal.id)}>{busyId === modal.id ? "Sending..." : t.enroll}</button>
               <button className="btn btn-ghost" type="button" onClick={() => setModal(null)}>{t.close}</button>
             </div>
           </div>

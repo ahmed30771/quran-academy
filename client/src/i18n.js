@@ -317,7 +317,7 @@ export const i18n = {
     phPass: "Any password",
     phPassNew: "Create a password",
     fullName: "Full name",
-    enterDash: "Enter dashboard",
+    enterDash: "Login",
     loginHint: "Admin has no public register. Teacher accounts wait for admin approval before they can teach.",
 
     overview: "Overview",
@@ -766,7 +766,7 @@ export const i18n = {
     phPass: "کوئی بھی پاس ورڈ",
     phPassNew: "پاس ورڈ بنائیں",
     fullName: "پورا نام",
-    enterDash: "ڈیش بورڈ کھولیں",
+    enterDash: "لاگ اِن",
     loginHint: "ایڈمن کا عوامی رجسٹر نہیں۔ استاد کے اکاؤنٹس تدریس سے پہلے ایڈمن کی منظوری کے منتظر رہتے ہیں۔",
 
     overview: "جائزہ",
