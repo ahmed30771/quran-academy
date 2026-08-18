@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
-import { audienceLabel, coursePath, levelLabel } from "../helpers";
+import { audienceLabel, categoryLabel, coursePath, levelLabel, localized } from "../helpers";
 
 export default function Courses() {
-  const { t, currency, user, showToast } = useApp();
+  const { t, lang, currency, user, showToast } = useApp();
   const nav = useNavigate();
   const [courses, setCourses] = useState([]);
   const [audience, setAudience] = useState("all");
@@ -82,7 +82,9 @@ export default function Courses() {
             </div>
           </div>
           <div className="grid-3">
-            {shown.map((c) => (
+            {shown.map((row) => {
+              const c = localized(row, lang);
+              return (
               <article className="card course" id={c.slug || c.id} key={c.id}>
                 <div className="course-cover">
                   {c.image_url ? <img src={c.image_url} alt="" /> : <span>{t.courseImageSoon}</span>}
@@ -92,7 +94,7 @@ export default function Courses() {
                 <div className="meta">
                   <span>{audienceLabel(c.audiences, t) || t.filterAll}</span>
                   <span>·</span>
-                  <span>{c.category}</span>
+                  <span>{categoryLabel(c.category, t)}</span>
                   <span>·</span>
                   <span>{levelLabel(c.levels, t) || c.level}</span>
                 </div>
@@ -103,7 +105,8 @@ export default function Courses() {
                   <button className="btn btn-primary btn-sm" type="button" disabled={busyId === c.id} onClick={() => enroll(c.id)}>{busyId === c.id ? "..." : t.enroll}</button>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

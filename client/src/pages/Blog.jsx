@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
+import { localized } from "../helpers";
 
 export default function Blog() {
-  const { t } = useApp();
+  const { t, lang } = useApp();
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
@@ -23,7 +24,9 @@ export default function Blog() {
       </section>
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap grid-3">
-          {posts.map((p) => (
+          {posts.map((row) => {
+            const p = localized(row, lang);
+            return (
             <Link className="card blog-card" to={`/blog/${p.id}`} key={p.id}>
               <div className={`cover${p.image_url ? " has-photo" : ""}`}>
                 {p.image_url ? <img src={p.image_url} alt="" /> : null}
@@ -32,7 +35,8 @@ export default function Blog() {
               <h3>{p.title}</h3>
               <p>{p.excerpt}</p>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </section>
     </main>

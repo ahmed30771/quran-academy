@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
-import { coursePath, initials, langLabel } from "../helpers";
+import { coursePath, initials, langLabel, localized } from "../helpers";
 
 export default function TeacherProfile() {
   const { id } = useParams();
-  const { t } = useApp();
+  const { t, lang } = useApp();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -65,13 +65,16 @@ export default function TeacherProfile() {
             <h2>{t.coursesITeach}</h2>
           </div>
           <div className="grid-3">
-            {courses.length ? courses.map((c) => (
+            {courses.length ? courses.map((row) => {
+              const c = localized(row, lang);
+              return (
               <Link className="card course" to={coursePath(c)} key={c.course_id}>
                 <div className="icon-orb">{c.icon || "ق"}</div>
                 <h3>{c.title}</h3>
                 <p>{c.blurb}</p>
               </Link>
-            )) : <p className="lede">{t.noTeachersYet}</p>}
+              );
+            }) : <p className="lede">{t.noTeachersYet}</p>}
           </div>
         </div>
       </section>

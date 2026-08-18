@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
-import { dashPath, validatePersonName, validateEmail, validatePassword } from "../helpers";
+import { dashPath, localized, validatePersonName, validateEmail, validatePassword } from "../helpers";
 
 export default function Login() {
-  const { t, user, setUser, showToast, ready } = useApp();
+  const { t, lang, user, setUser, showToast, ready } = useApp();
   const nav = useNavigate();
   const [mode, setMode] = useState("login");
   const [role, setRole] = useState("student");
@@ -244,7 +244,7 @@ export default function Login() {
                           checked={courseIds.includes(c.id)}
                           onChange={(e) => setCourseIds((ids) => (e.target.checked ? [...ids, c.id] : ids.filter((id) => id !== c.id)))}
                         />
-                        {c.title}
+                        {localized(c, lang).title}
                       </label>
                     ))}
                   </div>

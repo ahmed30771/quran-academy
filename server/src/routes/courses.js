@@ -3,6 +3,7 @@ import { query, queryOne } from "../db.js";
 import { authRequired, requireRole, optionalAuth } from "../middleware/auth.js";
 import { recordAudit } from "../middleware/ownership.js";
 import { coursePayload, STATUSES } from "../courseUtils.js";
+import { ensureCourseLocale, saveCourseLocale } from "../locale.js";
 
 const router = express.Router();
 
@@ -23,10 +24,12 @@ router.get("/", optionalAuth, async (req, res) => {
       if (!req.user || req.user.role !== "admin") {
         return res.status(403).json({ error: "Not allowed." });
       }
-      res.json(await query("SELECT * FROM courses ORDER BY sort_order, title"));
+      const rows = await query("SELECT * FROM courses ORDER BY sort_order, title");
+      res.json(await Promise.all(rows.map(ensureCourseLocale)));
       return;
     }
-    res.json(await query("SELECT * FROM courses WHERE status='active' ORDER BY sort_order, title"));
+    const rows = await query("SELECT * FROM courses WHERE status='active' ORDER BY sort_order, title");
+    res.json(await Promise.all(rows.map(ensureCourseLocale)));
   } catch (err) {
     fail(res, err, "Could not load courses.");
   }
@@ -56,7 +59,7 @@ router.post("/", authRequired, requireRole("admin"), async (req, res) => {
       ]
     );
     await recordAudit(req.user.id, "course.create", "course", row.id, { title: row.title });
-    res.json(row);
+    res.json(await saveCourseLocale(row));
   } catch (err) {
     fail(res, err, "Could not create course.");
   }
@@ -131,7 +134,7 @@ async function updateCourseRecord(req, res) {
     ]
   );
   await recordAudit(req.user.id, "course.update", "course", course.id, { title: row.title });
-  res.json(row);
+  res.json(await saveCourseLocale(row));
 }
 
 router.post("/:id/save", authRequired, requireRole("admin"), async (req, res) => {
@@ -147,6 +150,8 @@ router.post("/:id/delete", authRequired, requireRole("admin"), async (req, res) 
     const course = await findCourse(req.params.id);
     if (!course) return res.status(404).json({ error: "Course not found." });
     await query("DELETE FROM classes WHERE course_id=$1", [course.id]);
+    await query("DELETE FROM teacher_courses WHERE course_id=$1", [course.id]);
+    await query("DELETE FROM enrollments WHERE course_id=$1", [course.id]);
     await query("DELETE FROM courses WHERE id=$1", [course.id]);
     await recordAudit(req.user.id, "course.delete", "course", course.id, { title: course.title });
     res.json({ ok: true });
@@ -184,7 +189,7 @@ router.get("/:id", optionalAuth, async (req, res) => {
     if (row.status !== "active" && req.user?.role !== "admin") {
       return res.status(404).json({ error: "Course not found." });
     }
-    res.json(row);
+    res.json(await ensureCourseLocale(row));
   } catch (err) {
     fail(res, err, "Could not load course.");
   }

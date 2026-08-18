@@ -26,7 +26,7 @@ function publicTeacher(row) {
 
 async function teacherCourses(teacherId, statuses = ["approved"]) {
   return query(
-    `SELECT tc.id, tc.status, tc.course_id, co.title, co.slug, co.blurb, co.icon, co.category
+    `SELECT tc.id, tc.status, tc.course_id, co.title, co.slug, co.blurb, co.icon, co.category, co.locale_ur
      FROM teacher_courses tc
      JOIN courses co ON co.id=tc.course_id
      WHERE tc.teacher_id=$1 AND tc.status = ANY($2)

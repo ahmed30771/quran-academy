@@ -3,6 +3,7 @@ import { query, queryOne } from "../db.js";
 import { authRequired, requireRole } from "../middleware/auth.js";
 import { recordAudit } from "../middleware/ownership.js";
 import { slugify } from "../courseUtils.js";
+import { ensureBlogLocale, saveBlogLocale } from "../locale.js";
 
 const router = express.Router();
 
@@ -33,7 +34,8 @@ function postPayload(body = {}) {
 
 router.get("/", async (_req, res) => {
   try {
-    res.json(await query("SELECT id, title, date_label, tag, excerpt, image_url, created_at FROM blog_posts ORDER BY created_at DESC"));
+    const rows = await query("SELECT id, title, date_label, tag, excerpt, image_url, created_at, locale_ur FROM blog_posts ORDER BY created_at DESC");
+    res.json(await Promise.all(rows.map(ensureBlogLocale)));
   } catch (err) {
     fail(res, err, "Could not load posts.");
   }
@@ -57,7 +59,7 @@ router.post("/", authRequired, requireRole("admin"), async (req, res) => {
       [data.slug, data.title, data.date_label, data.tag, data.excerpt, data.body, data.image_url]
     );
     await recordAudit(req.user.id, "blog.create", "blog", row.id, { title: row.title });
-    res.json(row);
+    res.json(await saveBlogLocale(row));
   } catch (err) {
     fail(res, err, "Could not create post.");
   }
@@ -81,7 +83,7 @@ router.post("/:id/save", authRequired, requireRole("admin"), async (req, res) =>
       [data.title, data.date_label, data.tag, data.excerpt, data.body, data.image_url, post.id]
     );
     await recordAudit(req.user.id, "blog.update", "blog", post.id, { title: row.title });
-    res.json(row);
+    res.json(await saveBlogLocale(row));
   } catch (err) {
     fail(res, err, "Could not update post.");
   }
@@ -103,7 +105,7 @@ router.get("/:id", async (req, res) => {
   try {
     const row = await queryOne("SELECT * FROM blog_posts WHERE id=$1", [req.params.id]);
     if (!row) return res.status(404).json({ error: "Post not found." });
-    res.json(row);
+    res.json(await ensureBlogLocale(row));
   } catch (err) {
     fail(res, err, "Could not load post.");
   }

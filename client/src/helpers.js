@@ -74,6 +74,39 @@ export function levelLabel(list, t) {
   return items.map((l) => map[l] || l).join(" · ");
 }
 
+export function categoryLabel(value, t) {
+  const map = {
+    tajweed: t.filterTajweed,
+    hifz: t.filterHifz,
+    recitation: t.filterRec,
+    arabic: t.filterArabic,
+  };
+  return map[value] || value || "";
+}
+
+export function localized(item, lang) {
+  if (!item || lang !== "ur") return item;
+  const ur = item.locale_ur && typeof item.locale_ur === "object" ? item.locale_ur : {};
+  const pick = (key) => ur[key] || item[key];
+  return {
+    ...item,
+    title: pick("title"),
+    blurb: pick("blurb"),
+    full_blurb: pick("full_blurb"),
+    intro: pick("intro"),
+    description: pick("description"),
+    who_for: pick("who_for"),
+    learnings: pick("learnings"),
+    duration: pick("duration"),
+    length: pick("length"),
+    frequency: pick("frequency"),
+    requirements: pick("requirements"),
+    excerpt: pick("excerpt"),
+    body: pick("body"),
+    tag: pick("tag"),
+  };
+}
+
 export const COVER_MAX_BYTES = 2 * 1024 * 1024;
 
 function coverCrop(img) {

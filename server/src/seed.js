@@ -37,18 +37,25 @@ async function seed() {
     [hash]
   );
 
-  for (const c of catalog) {
-    await query(
-      `INSERT INTO courses (
-         id, slug, title, category, audiences, levels, track, level, duration, length, price_usd, blurb, full_blurb, icon, sort_order, status, image_url
-       ) VALUES ($1,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12,$13,'active', NULL)
-       ON CONFLICT (id) DO UPDATE SET
-         slug=EXCLUDED.slug, title=EXCLUDED.title, category=EXCLUDED.category, audiences=EXCLUDED.audiences,
-         levels=EXCLUDED.levels, track=EXCLUDED.track, level=EXCLUDED.level, duration=EXCLUDED.duration,
-         length=EXCLUDED.length, price_usd=EXCLUDED.price_usd, blurb=EXCLUDED.blurb, full_blurb=EXCLUDED.full_blurb,
-         icon=EXCLUDED.icon, sort_order=EXCLUDED.sort_order, status='active'`,
-      c
-    );
+  const seeded = await queryOne("SELECT key FROM settings WHERE key='demo_catalog'");
+  if (!seeded) {
+    for (const c of catalog) {
+      await query(
+        `INSERT INTO courses (
+           id, slug, title, category, audiences, levels, track, level, duration, length, price_usd, blurb, full_blurb, icon, sort_order, status, image_url
+         ) VALUES ($1,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12,$13,'active', NULL)
+         ON CONFLICT (id) DO NOTHING`,
+        c
+      );
+    }
+    for (const p of posts) {
+      await query(
+        `INSERT INTO blog_posts (id,title,date_label,tag,excerpt,body) VALUES ($1,$2,$3,$4,$5,$6)
+         ON CONFLICT (id) DO NOTHING`,
+        p
+      );
+    }
+    await query("INSERT INTO settings (key, value) VALUES ('demo_catalog', '{\"ok\":true}'::jsonb) ON CONFLICT DO NOTHING");
   }
 
   await query("UPDATE courses SET status='inactive' WHERE id IN ('tajweed-kids','tajweed-adv','family')");
@@ -58,6 +65,8 @@ async function seed() {
   if (amina) {
     await query("UPDATE users SET gender='female', teaching_languages='both', teach_kids=TRUE, teach_adults=TRUE WHERE id=$1", [amina.id]);
     for (const courseId of ["tajweed-ul-quran", "nazra", "noorani-qaida"]) {
+      const course = await queryOne("SELECT id FROM courses WHERE id=$1", [courseId]);
+      if (!course) continue;
       await query(
         `INSERT INTO teacher_courses (teacher_id, course_id, status) VALUES ($1,$2,'approved')
          ON CONFLICT (teacher_id, course_id) DO UPDATE SET status='approved'`,
@@ -67,21 +76,16 @@ async function seed() {
   }
   if (yusuf) {
     await query("UPDATE users SET gender='male', teaching_languages='urdu', teach_kids=FALSE, teach_adults=TRUE WHERE id=$1", [yusuf.id]);
-    await query(
-      `INSERT INTO teacher_courses (teacher_id, course_id, status) VALUES ($1,'hifz','approved')
-       ON CONFLICT (teacher_id, course_id) DO UPDATE SET status='approved'`,
-      [yusuf.id]
-    );
+    const hifz = await queryOne("SELECT id FROM courses WHERE id='hifz'");
+    if (hifz) {
+      await query(
+        `INSERT INTO teacher_courses (teacher_id, course_id, status) VALUES ($1,'hifz','approved')
+         ON CONFLICT (teacher_id, course_id) DO UPDATE SET status='approved'`,
+        [yusuf.id]
+      );
+    }
   }
 
-
-  for (const p of posts) {
-    await query(
-      `INSERT INTO blog_posts (id,title,date_label,tag,excerpt,body) VALUES ($1,$2,$3,$4,$5,$6)
-       ON CONFLICT (id) DO UPDATE SET title=EXCLUDED.title`,
-      p
-    );
-  }
 
   await query("DELETE FROM reviews");
   await query(
@@ -96,23 +100,35 @@ async function seed() {
 
   const fatima = await queryOne("SELECT id FROM users WHERE email='fatima@quranacademy.example'");
   const admin = await queryOne("SELECT id FROM users WHERE email='admin@quranacademy.example'");
-  if (fatima) await query("UPDATE users SET gender='female' WHERE id=$1", [fatima.id]);
+  if (fatima) {
+    await query("UPDATE users SET gender='female' WHERE id=$1", [fatima.id]);
+    const enrollCourse = await queryOne("SELECT id FROM courses WHERE id='tajweed-kids'");
+    if (enrollCourse) {
+      await query(
+        `INSERT INTO enrollments (user_id, course_id, plan, status)
+         VALUES ($1, 'tajweed-kids', 'standard', 'active')
+         ON CONFLICT (user_id, course_id) DO NOTHING`,
+        [fatima.id]
+      );
+    }
 
-  await query(
-    `INSERT INTO enrollments (user_id, course_id, plan, status)
-     VALUES ($1, 'tajweed-kids', 'standard', 'active')
-     ON CONFLICT (user_id, course_id) DO NOTHING`,
-    [fatima.id]
-  );
-
-  await query("DELETE FROM classes WHERE student_id=$1", [fatima.id]);
-  await query(
-    `INSERT INTO classes (course_id, teacher_id, student_id, day_label, time_label) VALUES
-      ('tajweed-kids', $1, $2, 'Mon', '16:00'),
-      ('hifz', $1, $2, 'Wed', '16:00'),
-      ('nazra', $1, $2, 'Sat', '11:00')`,
-    [amina.id, fatima.id]
-  );
+    await query("DELETE FROM classes WHERE student_id=$1", [fatima.id]);
+    const classCourses = await query("SELECT id FROM courses WHERE id = ANY($1)", [["tajweed-kids", "hifz", "nazra"]]);
+    const have = new Set(classCourses.map((row) => row.id));
+    if (amina && have.size) {
+      const rows = [
+        have.has("tajweed-kids") ? ["tajweed-kids", "Mon", "16:00"] : null,
+        have.has("hifz") ? ["hifz", "Wed", "16:00"] : null,
+        have.has("nazra") ? ["nazra", "Sat", "11:00"] : null,
+      ].filter(Boolean);
+      for (const [courseId, day, time] of rows) {
+        await query(
+          "INSERT INTO classes (course_id, teacher_id, student_id, day_label, time_label) VALUES ($1,$2,$3,$4,$5)",
+          [courseId, amina.id, fatima.id, day, time]
+        );
+      }
+    }
+  }
 
   await query("DELETE FROM homework WHERE student_id=$1", [fatima.id]);
   await query(

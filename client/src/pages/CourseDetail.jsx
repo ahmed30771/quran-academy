@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
-import { audienceLabel, initials, langLabel, levelLabel } from "../helpers";
+import { audienceLabel, categoryLabel, initials, langLabel, levelLabel, localized } from "../helpers";
 
 export default function CourseDetail() {
   const { id } = useParams();
-  const { t, currency, user, showToast } = useApp();
+  const { t, lang, currency, user, showToast } = useApp();
   const nav = useNavigate();
   const [course, setCourse] = useState(null);
   const [teachers, setTeachers] = useState([]);
@@ -44,51 +44,53 @@ export default function CourseDetail() {
     );
   }
 
+  const view = localized(course, lang);
+
   return (
     <main>
       <section className="page-hero">
         <div className="pattern-corner tl" />
         <div className="wrap">
           <p className="kicker">{t.courseKicker}</p>
-          <h1>{course.title}</h1>
-          <p className="lede">{course.intro || course.blurb}</p>
+          <h1>{view.title}</h1>
+          <p className="lede">{view.intro || view.blurb}</p>
         </div>
       </section>
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap course-detail">
           <div className="course-cover course-cover-lg">
-            {course.image_url ? <img src={course.image_url} alt="" /> : <span>{t.courseImageSoon}</span>}
+            {view.image_url ? <img src={view.image_url} alt="" /> : <span>{t.courseImageSoon}</span>}
           </div>
           <div className="meta">
-            <span>{audienceLabel(course.audiences, t)}</span>
+            <span>{audienceLabel(view.audiences, t)}</span>
             <span>·</span>
-            <span>{course.category}</span>
+            <span>{categoryLabel(view.category, t)}</span>
             <span>·</span>
-            <span>{levelLabel(course.levels, t) || course.level}</span>
+            <span>{levelLabel(view.levels, t) || view.level}</span>
           </div>
-          {Number(course.price_usd) > 0 ? <p className="price">{formatMoney(course.price_usd, currency)} <span>{t.perMonth}</span></p> : null}
-          <p>{course.description || course.full_blurb || course.blurb}</p>
+          {Number(view.price_usd) > 0 ? <p className="price">{formatMoney(view.price_usd, currency)} <span>{t.perMonth}</span></p> : null}
+          <p>{view.description || view.full_blurb || view.blurb}</p>
           <div className="grid-2" style={{ marginTop: "1.5rem" }}>
             <article className="card">
               <h3>{t.whoFor}</h3>
-              <p>{course.who_for || audienceLabel(course.audiences, t)}</p>
+              <p>{view.who_for || audienceLabel(view.audiences, t)}</p>
             </article>
             <article className="card">
               <h3>{t.willLearn}</h3>
-              <p>{course.learnings || course.blurb}</p>
+              <p>{view.learnings || view.blurb}</p>
             </article>
             <article className="card">
               <h3>{t.courseDuration}</h3>
-              <p>{[...new Set([course.duration, course.length].filter(Boolean))].join(" · ") || "—"}</p>
+              <p>{[...new Set([view.duration, view.length].filter(Boolean))].join(" · ") || "—"}</p>
             </article>
             <article className="card">
               <h3>{t.classFrequency}</h3>
-              <p>{course.frequency || "—"}</p>
+              <p>{view.frequency || "—"}</p>
             </article>
           </div>
           <article className="card" style={{ marginTop: "1.25rem" }}>
             <h3>{t.courseReqs}</h3>
-            <p>{course.requirements || "—"}</p>
+            <p>{view.requirements || "—"}</p>
           </article>
           <div className="btn-row">
             <button className="btn btn-gold" type="button" disabled={busy} onClick={enroll}>{busy ? "..." : t.enroll}</button>
