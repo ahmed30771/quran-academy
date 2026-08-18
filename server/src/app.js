@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { query } from "./db.js";
+import { ensureCourseSchemaOnce } from "./ensure.js";
 import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
 import courseRoutes from "./routes/courses.js";
@@ -23,29 +24,67 @@ const allowed = [
   process.env.CLIENT_ORIGIN,
   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
   "http://localhost:5173",
+  "http://localhost:5174",
 ].filter(Boolean);
 
 app.use(
   cors({
     origin(origin, cb) {
-      if (!origin || allowed.includes(origin)) return cb(null, true);
+      if (!origin || allowed.includes(origin) || /^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true);
       cb(null, false);
     },
     credentials: true,
   })
 );
-app.use(express.json({ limit: "2mb" }));
+
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) return next();
+  if (typeof req.body === "string" || Buffer.isBuffer(req.body)) {
+    const raw = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : req.body;
+    if (!raw) {
+      req.body = {};
+      return next();
+    }
+    try {
+      req.body = JSON.parse(raw);
+      return next();
+    } catch {
+      return res.status(400).json({ error: "Invalid JSON body." });
+    }
+  }
+  express.json({ limit: "4mb" })(req, res, (err) => {
+    if (!err) return next();
+    if (err.type === "entity.too.large") {
+      return res.status(413).json({ error: "Image is too large. Please use a file under 1 MB." });
+    }
+    return res.status(400).json({ error: err.message || "Invalid request body." });
+  });
+});
 app.use(cookieParser());
 
-app.use((req, _res, next) => {
-  const forwarded = req.headers["x-forwarded-uri"];
-  if (typeof forwarded === "string" && forwarded.startsWith("/api") && !req.url.startsWith("/api")) {
-    req.url = forwarded;
+app.use(async (_req, _res, next) => {
+  try {
+    await ensureCourseSchemaOnce();
+  } catch (err) {
+    console.error(err);
   }
   next();
 });
 
-app.get("/api/health", async (_req, res) => {
+app.use((req, _res, next) => {
+  const header = req.headers["x-forwarded-uri"] || req.headers["x-invoke-path"] || "";
+  const candidate = String(Array.isArray(header) ? header[0] : header).split("?")[0];
+  if (candidate.startsWith("/api/") && !String(req.url).startsWith("/api/")) {
+    const url = String(req.url || "");
+    const qs = url.includes("?") ? url.slice(url.indexOf("?")) : "";
+    req.url = candidate + qs;
+  }
+  next();
+});
+
+const api = express.Router();
+
+api.get("/health", async (_req, res) => {
   try {
     await query("SELECT 1");
     res.json({ ok: true });
@@ -54,7 +93,7 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
-app.get("/api/reviews", async (_req, res) => {
+api.get("/reviews", async (_req, res) => {
   try {
     res.json(await query("SELECT * FROM reviews"));
   } catch (err) {
@@ -63,10 +102,13 @@ app.get("/api/reviews", async (_req, res) => {
   }
 });
 
-app.get("/api/teachers", async (_req, res) => {
+api.get("/teachers", async (_req, res) => {
   try {
     res.json(
-      await query("SELECT id, name, bio, avatar FROM users WHERE role='teacher' AND status='active'")
+      await query(
+        `SELECT id, name, bio, avatar, gender, teaching_languages, teach_kids, teach_adults, experience
+         FROM users WHERE role='teacher' AND status='active' ORDER BY name`
+      )
     );
   } catch (err) {
     console.error(err);
@@ -74,22 +116,28 @@ app.get("/api/teachers", async (_req, res) => {
   }
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/courses", courseRoutes);
-app.use("/api/contact", contactRoutes);
-app.use("/api/blog", blogRoutes);
-app.use("/api/dash", dashRoutes);
-app.use("/api/students", studentRoutes);
-app.use("/api/teachers", teacherRoutes);
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/progress", progressRoutes);
-app.use("/api/assignments", assignmentRoutes);
-app.use("/api/notifications", notificationRoutes);
+api.use("/auth", authRoutes);
+api.use("/profile", profileRoutes);
+api.use("/courses", courseRoutes);
+api.use("/contact", contactRoutes);
+api.use("/blog", blogRoutes);
+api.use("/dash", dashRoutes);
+api.use("/students", studentRoutes);
+api.use("/teachers", teacherRoutes);
+api.use("/attendance", attendanceRoutes);
+api.use("/progress", progressRoutes);
+api.use("/assignments", assignmentRoutes);
+api.use("/notifications", notificationRoutes);
+api.use((req, res) => {
+  res.status(404).json({ error: `API route not found: ${req.method} ${req.originalUrl}` });
+});
+
+app.use("/api", api);
+app.use("/", api);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(500).json({ error: err.message || "Server error." });
+  if (!res.headersSent) res.status(500).json({ error: err.message || "Server error." });
 });
 
 export default app;

@@ -138,7 +138,16 @@ router.get("/admin", authRequired, requireRole("admin"), async (_req, res) => {
   );
   const inbox = await query("SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 10");
   const pendingTeachers = await query(
-    "SELECT id, name, email, created_at FROM users WHERE role='teacher' AND status='pending'"
+    `SELECT id, name, email, gender, teaching_languages, teach_kids, teach_adults, created_at
+     FROM users WHERE role='teacher' AND status='pending'`
+  );
+  const teacherCourseRequests = await query(
+    `SELECT tc.id, tc.status, tc.teacher_id, tc.course_id, u.name AS teacher, u.email, u.gender, u.teaching_languages,
+            u.teach_kids, u.teach_adults, co.title AS course, co.slug
+     FROM teacher_courses tc
+     JOIN users u ON u.id=tc.teacher_id
+     JOIN courses co ON co.id=tc.course_id
+     ORDER BY tc.created_at DESC`
   );
   const posts = await query("SELECT id, title, date_label FROM blog_posts");
   res.json({
@@ -147,6 +156,7 @@ router.get("/admin", authRequired, requireRole("admin"), async (_req, res) => {
     enrollments,
     inbox,
     pendingTeachers,
+    teacherCourseRequests,
     posts,
     stats: {
       inboxCount: inbox.length,
@@ -160,6 +170,30 @@ router.post("/admin/teachers/:id/approve", authRequired, requireRole("admin"), a
   const yes = req.body?.approve !== false;
   await query("UPDATE users SET status=$1 WHERE id=$2 AND role='teacher'", [yes ? "active" : "declined", req.params.id]);
   res.json({ ok: true });
+});
+
+router.post("/admin/teacher-courses/:id", authRequired, requireRole("admin"), async (req, res) => {
+  const status = req.body?.status;
+  if (!["approved", "rejected", "pending"].includes(status)) {
+    return res.status(400).json({ error: "Status must be approved, rejected, or pending." });
+  }
+  const row = await queryOne(
+    "UPDATE teacher_courses SET status=$1, updated_at=NOW() WHERE id=$2 RETURNING *",
+    [status, req.params.id]
+  );
+  if (!row) return res.status(404).json({ error: "Request not found." });
+  res.json(row);
+});
+
+router.put("/admin/teachers/:id/teaching", authRequired, requireRole("admin"), async (req, res) => {
+  const languages = ["urdu", "english", "both", ""].includes(req.body?.teachingLanguages) ? req.body.teachingLanguages : "";
+  const row = await queryOne(
+    `UPDATE users SET teaching_languages=$1, teach_kids=$2, teach_adults=$3, updated_at=NOW()
+     WHERE id=$4 AND role='teacher' RETURNING id, name, teaching_languages, teach_kids, teach_adults`,
+    [languages || null, !!req.body?.teachKids, !!req.body?.teachAdults, req.params.id]
+  );
+  if (!row) return res.status(404).json({ error: "Teacher not found." });
+  res.json(row);
 });
 
 export default router;

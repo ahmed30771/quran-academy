@@ -752,7 +752,7 @@ html[lang="ur"] label {
   align-items: center;
   padding: 5.5rem 0 5rem;
   background:
-    url("../assets/hero-cover.png") center 42% / cover no-repeat;
+    url("../assets/hero-cover.png") 68% 42% / cover no-repeat;
   color: #fff;
 }
 

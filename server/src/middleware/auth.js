@@ -30,6 +30,17 @@ export function authRequired(req, res, next) {
   }
 }
 
+export function optionalAuth(req, _res, next) {
+  const token = readToken(req);
+  if (!token) return next();
+  try {
+    req.user = jwt.verify(token, secret());
+  } catch {
+    req.user = null;
+  }
+  next();
+}
+
 export function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
@@ -61,6 +72,10 @@ export function publicUser(row) {
     showEmail: !!row.show_email,
     emailNotif: !!row.email_notif,
     waNotif: !!row.wa_notif,
+    gender: row.gender || "",
+    teachingLanguages: row.teaching_languages || "",
+    teachKids: !!row.teach_kids,
+    teachAdults: !!row.teach_adults,
     status: row.status,
   };
 }

@@ -1,27 +1,72 @@
 import express from "express";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { query, queryOne } from "../db.js";
 import { signToken, publicUser, cookieOpts, readToken } from "../middleware/auth.js";
 import { recordAudit } from "../middleware/ownership.js";
+import { normalizeName, validatePersonName, validateEmail, validatePassword } from "../validate.js";
+import { sendMail } from "../mail.js";
 
 const router = express.Router();
 const ROUNDS = 12;
 
+async function ensureResetTable() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS password_resets (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      code_hash VARCHAR(255) NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+}
+
 router.post("/register", async (req, res) => {
-  const { name, email, password, role } = req.body || {};
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: "Name, email, and password are required." });
+  const { name, email, password, role, gender, phone, teachingLanguages, teachKids, teachAdults, courseIds } = req.body || {};
+  const nameErr = validatePersonName(name);
+  const emailErr = validateEmail(email);
+  const passErr = validatePassword(password);
+  if (nameErr || emailErr || passErr) {
+    return res.status(400).json({ error: nameErr || emailErr || passErr });
+  }
+  if (gender !== "male" && gender !== "female") {
+    return res.status(400).json({ error: "Please select gender." });
   }
   const chosen = role === "teacher" ? "teacher" : "student";
+  const langs = chosen === "teacher" && ["urdu", "english", "both"].includes(teachingLanguages) ? teachingLanguages : null;
   try {
     const password_hash = await bcrypt.hash(password, ROUNDS);
     const user = await queryOne(
-      `INSERT INTO users (role, name, email, password_hash, status)
-       VALUES ($1,$2,$3,$4,$5)
+      `INSERT INTO users (role, name, email, password_hash, status, gender, phone_number, teaching_languages, teach_kids, teach_adults)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING *`,
-      [chosen, name.trim(), email.trim().toLowerCase(), password_hash, chosen === "teacher" ? "pending" : "active"]
+      [
+        chosen,
+        normalizeName(name),
+        String(email).trim().toLowerCase(),
+        password_hash,
+        chosen === "teacher" ? "pending" : "active",
+        gender,
+        String(phone || "").trim(),
+        langs,
+        chosen === "teacher" && !!teachKids,
+        chosen === "teacher" && !!teachAdults,
+      ]
     );
+    if (chosen === "teacher" && Array.isArray(courseIds)) {
+      for (const courseId of [...new Set(courseIds.map(String))]) {
+        const course = await queryOne("SELECT id FROM courses WHERE (id=$1 OR slug=$1) AND status='active'", [courseId]);
+        if (!course) continue;
+        await query(
+          `INSERT INTO teacher_courses (teacher_id, course_id, status) VALUES ($1,$2,'pending')
+           ON CONFLICT (teacher_id, course_id) DO NOTHING`,
+          [user.id, course.id]
+        );
+      }
+    }
     await recordAudit(user.id, "user.registered", "user", user.id, { role: user.role });
     const token = signToken(user);
     res.cookie("token", token, cookieOpts);
@@ -35,9 +80,10 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: "Email and password are required." });
+  const emailErr = validateEmail(email);
+  if (emailErr || !password) return res.status(400).json({ error: emailErr || "Email and password are required." });
   try {
-    const user = await queryOne("SELECT * FROM users WHERE email=$1", [email.trim().toLowerCase()]);
+    const user = await queryOne("SELECT * FROM users WHERE email=$1", [String(email).trim().toLowerCase()]);
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: "Email or password is incorrect." });
     }
@@ -49,6 +95,85 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not sign in. Check the database connection." });
+  }
+});
+
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body || {};
+  const emailErr = validateEmail(email);
+  if (emailErr) return res.status(400).json({ error: emailErr });
+  const normalized = String(email).trim().toLowerCase();
+  try {
+    await ensureResetTable();
+    const user = await queryOne("SELECT id, name, email FROM users WHERE email=$1", [normalized]);
+    if (user) {
+      const recent = await queryOne(
+        `SELECT id FROM password_resets
+         WHERE user_id=$1 AND created_at > NOW() - INTERVAL '60 seconds'
+         ORDER BY created_at DESC LIMIT 1`,
+        [user.id]
+      );
+      if (recent) {
+        return res.json({ ok: true });
+      }
+      await query("UPDATE password_resets SET used_at=NOW() WHERE user_id=$1 AND used_at IS NULL", [user.id]);
+      const code = String(crypto.randomInt(100000, 1000000));
+      const code_hash = await bcrypt.hash(code, ROUNDS);
+      await query(
+        `INSERT INTO password_resets (user_id, code_hash, expires_at)
+         VALUES ($1,$2, NOW() + INTERVAL '15 minutes')`,
+        [user.id, code_hash]
+      );
+      const text = `Assalamu alaikum ${user.name},\n\nYour Quran Academy password reset code is ${code}.\nIt expires in 15 minutes. If you did not ask for this, you can ignore this message.\n`;
+      try {
+        await sendMail({
+          to: user.email,
+          subject: "Quran Academy password reset code",
+          text,
+          html: `<p>Assalamu alaikum ${user.name},</p><p>Your password reset code is <strong>${code}</strong>.</p><p>It expires in 15 minutes.</p>`,
+        });
+      } catch (mailErr) {
+        console.error(mailErr);
+        console.log(`[mail] reset code for ${user.email}: ${code}`);
+      }
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not start password reset." });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  const { email, code, password } = req.body || {};
+  const emailErr = validateEmail(email);
+  const passErr = validatePassword(password);
+  if (emailErr || passErr) return res.status(400).json({ error: emailErr || passErr });
+  if (!/^\d{6}$/.test(String(code || "").trim())) {
+    return res.status(400).json({ error: "Enter the 6-digit code sent to your email." });
+  }
+  try {
+    await ensureResetTable();
+    const user = await queryOne("SELECT * FROM users WHERE email=$1", [String(email).trim().toLowerCase()]);
+    if (!user) return res.status(400).json({ error: "This reset code is invalid or has expired." });
+    const row = await queryOne(
+      `SELECT * FROM password_resets
+       WHERE user_id=$1 AND used_at IS NULL AND expires_at > NOW()
+       ORDER BY created_at DESC LIMIT 1`,
+      [user.id]
+    );
+    if (!row || !(await bcrypt.compare(String(code).trim(), row.code_hash))) {
+      return res.status(400).json({ error: "This reset code is invalid or has expired." });
+    }
+    const password_hash = await bcrypt.hash(password, ROUNDS);
+    await query("UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2", [password_hash, user.id]);
+    await query("UPDATE password_resets SET used_at=NOW() WHERE id=$1", [row.id]);
+    await query("UPDATE password_resets SET used_at=NOW() WHERE user_id=$1 AND used_at IS NULL", [user.id]);
+    await recordAudit(user.id, "user.password_reset", "user", user.id, {});
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not update password." });
   }
 });
 
