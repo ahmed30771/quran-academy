@@ -1,10 +1,10 @@
 import { query } from "./db.js";
 import {
-  BLOG_KEYS,
-  COURSE_KEYS,
   blogSource,
   courseSource,
-  localeFromGlossary,
+  isMixedText,
+  leftoverEnglish,
+  localeNeedsRefresh,
   translateFields,
 } from "./translate.js";
 
@@ -20,46 +20,42 @@ function parseLocale(value) {
   return typeof value === "object" ? value : {};
 }
 
-export async function saveCourseLocale(row) {
-  if (!row?.id) return row;
-  try {
-    const locale_ur = await translateFields(courseSource(row));
-    await query("UPDATE courses SET locale_ur=$1 WHERE id=$2", [locale_ur, row.id]);
-    return { ...row, locale_ur };
-  } catch {
-    return row;
+function cleanLocale(locale) {
+  const out = {};
+  for (const [key, value] of Object.entries(locale || {})) {
+    const text = String(value || "").trim();
+    if (text && !isMixedText(text) && !leftoverEnglish(text)) out[key] = text;
   }
+  return out;
 }
 
-export async function saveBlogLocale(row) {
-  if (!row?.id) return row;
-  try {
-    const locale_ur = await translateFields(blogSource(row));
-    await query("UPDATE blog_posts SET locale_ur=$1 WHERE id=$2", [locale_ur, row.id]);
-    return { ...row, locale_ur };
-  } catch {
-    return row;
-  }
+async function persistLocale(table, id, locale_ur) {
+  if (!id || !locale_ur || !Object.keys(locale_ur).length) return;
+  await query(`UPDATE ${table} SET locale_ur=$1 WHERE id=$2`, [locale_ur, id]);
 }
 
-export async function ensureCourseLocale(row) {
-  if (!row) return row;
-  const current = parseLocale(row.locale_ur);
-  if (Object.keys(current).length) return { ...row, locale_ur: current };
-  const locale_ur = localeFromGlossary(row, COURSE_KEYS);
-  if (Object.keys(locale_ur).length) {
-    await query("UPDATE courses SET locale_ur=$1 WHERE id=$2", [locale_ur, row.id]).catch(() => {});
-  }
+async function fillLocale(table, row, source) {
+  if (!row?.id) return row;
+  const current = cleanLocale(parseLocale(row.locale_ur));
+  if (!localeNeedsRefresh(current, source)) return { ...row, locale_ur: current };
+  const next = await translateFields(source);
+  const locale_ur = cleanLocale({ ...current, ...next });
+  await persistLocale(table, row.id, locale_ur).catch(() => {});
   return { ...row, locale_ur };
 }
 
-export async function ensureBlogLocale(row) {
-  if (!row) return row;
-  const current = parseLocale(row.locale_ur);
-  if (Object.keys(current).length) return { ...row, locale_ur: current };
-  const locale_ur = localeFromGlossary(row, BLOG_KEYS);
-  if (Object.keys(locale_ur).length) {
-    await query("UPDATE blog_posts SET locale_ur=$1 WHERE id=$2", [locale_ur, row.id]).catch(() => {});
-  }
-  return { ...row, locale_ur };
+export function saveCourseLocale(row) {
+  return fillLocale("courses", row, courseSource(row));
+}
+
+export function saveBlogLocale(row) {
+  return fillLocale("blog_posts", row, blogSource(row));
+}
+
+export function ensureCourseLocale(row) {
+  return fillLocale("courses", row, courseSource(row));
+}
+
+export function ensureBlogLocale(row) {
+  return fillLocale("blog_posts", row, blogSource(row));
 }
