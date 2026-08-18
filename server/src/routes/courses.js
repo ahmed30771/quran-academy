@@ -142,6 +142,19 @@ router.post("/:id/save", authRequired, requireRole("admin"), async (req, res) =>
   }
 });
 
+router.post("/:id/delete", authRequired, requireRole("admin"), async (req, res) => {
+  try {
+    const course = await findCourse(req.params.id);
+    if (!course) return res.status(404).json({ error: "Course not found." });
+    await query("DELETE FROM classes WHERE course_id=$1", [course.id]);
+    await query("DELETE FROM courses WHERE id=$1", [course.id]);
+    await recordAudit(req.user.id, "course.delete", "course", course.id, { title: course.title });
+    res.json({ ok: true });
+  } catch (err) {
+    fail(res, err, "Could not delete course.");
+  }
+});
+
 router.patch("/:id/status", authRequired, requireRole("admin"), async (req, res) => {
   try {
     const status = STATUSES.includes(req.body?.status) ? req.body.status : "";

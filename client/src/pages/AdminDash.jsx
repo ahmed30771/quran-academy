@@ -77,6 +77,7 @@ export default function AdminDash() {
   const [form, setForm] = useState(emptyCourse);
   const [editing, setEditing] = useState("");
   const [errors, setErrors] = useState({});
+  const [menuId, setMenuId] = useState("");
 
   function load() {
     api("/api/dash/admin").then(setData).catch(() => {});
@@ -84,6 +85,13 @@ export default function AdminDash() {
   }
 
   useEffect(load, []);
+
+  useEffect(() => {
+    if (!menuId) return;
+    const close = () => setMenuId("");
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [menuId]);
 
   function setField(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -130,7 +138,25 @@ export default function AdminDash() {
 
   async function toggleCourse(c) {
     try {
+      setMenuId("");
       await api(`/api/courses/${encodeURIComponent(c.id || c.slug)}/status`, { method: "PATCH", body: { status: c.status === "active" ? "inactive" : "active" } });
+      load();
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
+
+  async function deleteCourse(c) {
+    if (!window.confirm(t.confirmDeleteCourse)) return;
+    try {
+      setMenuId("");
+      await api(`/api/courses/${encodeURIComponent(c.id || c.slug)}/delete`, { method: "POST" });
+      if (editing === c.id || editing === c.slug) {
+        setEditing("");
+        setForm(emptyCourse());
+        setErrors({});
+      }
+      showToast(t.deleteCourse);
       load();
     } catch (err) {
       showToast(err.message);
@@ -148,6 +174,7 @@ export default function AdminDash() {
 
   function editCourse(c) {
     setEditing(c.id || c.slug);
+    setMenuId("");
     setErrors({});
     setForm({
       title: c.title || "",
@@ -409,8 +436,26 @@ export default function AdminDash() {
                     <td>{Number(c.price_usd) > 0 ? formatMoney(c.price_usd, currency) : "—"}</td>
                     <td>{c.status === "active" ? t.courseActive : t.courseInactive}</td>
                     <td>
-                      <button className="btn btn-primary btn-sm" type="button" onClick={() => editCourse(c)}>{t.editCourse}</button>
-                      <button className="btn btn-ghost btn-sm" type="button" onClick={() => toggleCourse(c)}>{c.status === "active" ? t.deactivate : t.activate}</button>
+                      <div className="row-menu">
+                        <button
+                          className="row-menu-btn"
+                          type="button"
+                          aria-label="Course actions"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuId(menuId === c.id ? "" : c.id);
+                          }}
+                        >
+                          ⋯
+                        </button>
+                        {menuId === c.id ? (
+                          <div className="row-menu-list" onClick={(e) => e.stopPropagation()}>
+                            <button type="button" onClick={() => toggleCourse(c)}>{c.status === "active" ? t.deactivate : t.activate}</button>
+                            <button type="button" onClick={() => editCourse(c)}>{t.editCourse}</button>
+                            <button type="button" className="is-danger" onClick={() => deleteCourse(c)}>{t.deleteCourse}</button>
+                          </div>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}

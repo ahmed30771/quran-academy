@@ -2241,6 +2241,58 @@ textarea.is-invalid,
   letter-spacing: 0.04em;
 }
 
+.row-menu {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.row-menu-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.row-menu-list {
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  min-width: 170px;
+  padding: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(43, 36, 24, 0.12);
+}
+
+.row-menu-list button {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  text-align: start;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.row-menu-list button:hover {
+  background: var(--ivory);
+}
+
+.row-menu-list button.is-danger {
+  color: #b42318;
+}
+
 .toggle {
   width: 42px;
   height: 24px;
