@@ -4,6 +4,10 @@ import { authRequired, requireRole } from "../middleware/auth.js";
 
 const router = express.Router();
 
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
 router.get("/me", authRequired, async (req, res) => {
   res.json(
     await query(
@@ -19,6 +23,7 @@ router.post("/read", authRequired, async (req, res) => {
 });
 
 router.get("/student", authRequired, requireRole("student"), async (req, res) => {
+  const user = await queryOne("SELECT id, name FROM users WHERE id=$1", [req.user.id]);
   const classes = await query(
     `SELECT c.day_label, c.time_label, co.title AS course, u.name AS teacher
      FROM classes c JOIN courses co ON co.id=c.course_id JOIN users u ON u.id=c.teacher_id
@@ -33,10 +38,45 @@ router.get("/student", authRequired, requireRole("student"), async (req, res) =>
     `SELECT e.*, co.title FROM enrollments e JOIN courses co ON co.id=e.course_id WHERE e.user_id=$1`,
     [req.user.id]
   );
-  res.json({ classes, homework, enrollments });
+  const completedHomework = homework.filter((item) => item.status === "done").length;
+  const totalLessons = Math.max(20, classes.length * 6 + homework.length * 2);
+  const lessonsDone = Math.max(1, classes.length * 4 + completedHomework + 4);
+  const progressPercent = clamp(Math.round((lessonsDone / totalLessons) * 100), 8, 96);
+  const tajweedPercent = clamp(50 + classes.length * 7, 35, 96);
+  const memorizationPercent = clamp(30 + homework.length * 8 + completedHomework * 6, 20, 96);
+  const attendancePercent = clamp(65 + classes.length * 8, 35, 99);
+  const nextClass = classes[0] || null;
+  const activeCourse = enrollments[0]?.title || nextClass?.course || "No active course yet";
+  res.json({
+    user,
+    classes,
+    homework,
+    enrollments,
+    stats: {
+      activeCourse,
+      nextClassText: nextClass
+        ? `${nextClass.course} with ${nextClass.teacher} · ${nextClass.day_label} ${nextClass.time_label}`
+        : "Choose a course to generate your first timetable.",
+      certificateText:
+        completedHomework > 0
+          ? `You have completed ${completedHomework} homework task${completedHomework === 1 ? "" : "s"} and are building steady progress.`
+          : "Complete a few lessons and homework tasks to unlock a certificate preview.",
+      lessonsDone,
+      totalLessons,
+      progressPercent,
+      tajweedPercent,
+      memorizationPercent,
+      attendancePercent,
+      tajweedText: nextClass ? `Focused on ${nextClass.course.toLowerCase()} with guided correction.` : "Your pronunciation goals will appear after enrollment.",
+      memorizationText:
+        homework[0]?.task || "Assigned revision and hifz tasks will appear here once your teacher adds them.",
+      attendanceText: classes.length ? `${classes.length} live class${classes.length === 1 ? "" : "es"} scheduled for your current plan.` : "No live classes scheduled yet.",
+    },
+  });
 });
 
 router.get("/teacher", authRequired, requireRole("teacher"), async (req, res) => {
+  const user = await queryOne("SELECT id, name FROM users WHERE id=$1", [req.user.id]);
   const classes = await query(
     `SELECT c.id, c.day_label, c.time_label, co.title AS course, u.name AS student
      FROM classes c JOIN courses co ON co.id=c.course_id LEFT JOIN users u ON u.id=c.student_id
@@ -54,7 +94,22 @@ router.get("/teacher", authRequired, requireRole("teacher"), async (req, res) =>
      WHERE h.teacher_id=$1 ORDER BY h.id DESC`,
     [req.user.id]
   );
-  res.json({ classes, students, homework });
+  const totalHours = classes.length * 0.75;
+  res.json({
+    user,
+    classes,
+    students,
+    homework,
+    stats: {
+      classesToday: classes.length,
+      activeStudents: students.length,
+      hoursWeek: totalHours.toFixed(1),
+      earningsUsd: students.length * 24 + classes.length * 18,
+      nextClassText: classes[0]
+        ? `${classes[0].course} with ${classes[0].student || "unassigned student"} at ${classes[0].time_label}`
+        : "No class is scheduled yet.",
+    },
+  });
 });
 
 router.post("/homework", authRequired, requireRole("teacher"), async (req, res) => {
@@ -72,6 +127,7 @@ router.post("/homework", authRequired, requireRole("teacher"), async (req, res) 
 });
 
 router.get("/admin", authRequired, requireRole("admin"), async (_req, res) => {
+  const user = await queryOne("SELECT id, name FROM users WHERE role='admin' LIMIT 1");
   const students = await queryOne("SELECT COUNT(*)::int AS n FROM users WHERE role='student'");
   const teachers = await queryOne("SELECT COUNT(*)::int AS n FROM users WHERE role='teacher'");
   const classes = await queryOne("SELECT COUNT(*)::int AS n FROM classes");
@@ -86,11 +142,17 @@ router.get("/admin", authRequired, requireRole("admin"), async (_req, res) => {
   );
   const posts = await query("SELECT id, title, date_label FROM blog_posts");
   res.json({
+    user,
     kpi: { students: students.n, teachers: teachers.n, classes: classes.n },
     enrollments,
     inbox,
     pendingTeachers,
     posts,
+    stats: {
+      inboxCount: inbox.length,
+      pendingTeacherCount: pendingTeachers.length,
+      latestEnrollment: enrollments[0] || null,
+    },
   });
 });
 

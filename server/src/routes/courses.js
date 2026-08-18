@@ -16,6 +16,8 @@ router.get("/:id", async (req, res) => {
 
 router.post("/:id/enroll", authRequired, requireRole("student"), async (req, res) => {
   const plan = req.body?.plan || "standard";
+  const course = await queryOne("SELECT id, title FROM courses WHERE id=$1", [req.params.id]);
+  if (!course) return res.status(404).json({ error: "Course not found." });
   const exists = await queryOne(
     "SELECT id FROM enrollments WHERE user_id=$1 AND course_id=$2",
     [req.user.id, req.params.id]
@@ -26,7 +28,14 @@ router.post("/:id/enroll", authRequired, requireRole("student"), async (req, res
      VALUES ($1,$2,$3,'pending') RETURNING id`,
     [req.user.id, req.params.id, plan]
   );
-  res.json({ ok: true });
+  const admin = await queryOne("SELECT id FROM users WHERE role='admin' LIMIT 1");
+  if (admin) {
+    await queryOne(
+      "INSERT INTO notifications (user_id, text) VALUES ($1,$2) RETURNING id",
+      [admin.id, `New enrollment for ${course.title}.`]
+    );
+  }
+  res.json({ ok: true, course });
 });
 
 export default router;
