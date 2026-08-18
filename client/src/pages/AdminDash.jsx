@@ -62,7 +62,7 @@ function mapCourseError(message, t) {
 }
 
 function emptyPost() {
-  return { title: "", tag: "", excerpt: "", body: "" };
+  return { title: "", tag: "", excerpt: "", body: "", image_url: "" };
 }
 
 function validatePost(form, t) {
@@ -81,6 +81,7 @@ function mapPostError(message, t) {
   if (s.includes("tag")) return { tag: t.errBlogTag };
   if (s.includes("excerpt")) return { excerpt: t.errBlogExcerpt };
   if (s.includes("write the post") || s.includes("body")) return { body: t.errBlogBody };
+  if (s.includes("image")) return { image_url: t.errCourseImage };
   return { form: message || t.errBlogTitle };
 }
 
@@ -242,8 +243,8 @@ export default function AdminDash() {
     setPostErrors(next);
     if (Object.values(next).some(Boolean)) return;
     try {
-      if (editingPost) await api(`/api/blog/${encodeURIComponent(editingPost)}/save`, { method: "POST", body: postForm });
-      else await api("/api/blog", { method: "POST", body: postForm });
+      if (editingPost) await api(`/api/blog/${encodeURIComponent(editingPost)}/save`, { method: "POST", body: { ...postForm, image_url: postForm.image_url || null } });
+      else await api("/api/blog", { method: "POST", body: { ...postForm, image_url: postForm.image_url || null } });
       showToast(t.savePost);
       setPostForm(emptyPost());
       setEditingPost("");
@@ -264,6 +265,7 @@ export default function AdminDash() {
         tag: full.tag || "",
         excerpt: full.excerpt || "",
         body: full.body || "",
+        image_url: full.image_url || "",
       });
       setPostErrors({});
       setActive("blog");
@@ -308,6 +310,19 @@ export default function AdminDash() {
     setErrors((e) => ({ ...e, image_url: "" }));
     const reader = new FileReader();
     reader.onload = () => setForm((f) => ({ ...f, image_url: String(reader.result || "") }));
+    reader.readAsDataURL(file);
+  }
+
+  function onPostImage(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1000000) {
+      setPostErrors((err) => ({ ...err, image_url: t.errCourseImage }));
+      return;
+    }
+    setPostErrors((err) => ({ ...err, image_url: "" }));
+    const reader = new FileReader();
+    reader.onload = () => setPostForm((f) => ({ ...f, image_url: String(reader.result || "") }));
     reader.readAsDataURL(file);
   }
   async function decide(id, approve) {
@@ -572,6 +587,10 @@ export default function AdminDash() {
               <Field label={t.blogBody} error={postErrors.body}>
                 <textarea value={postForm.body} onChange={(e) => setPostField("body", e.target.value)} className={postErrors.body ? "is-invalid" : ""} />
               </Field>
+              <Field label={t.blogCover} error={postErrors.image_url}>
+                <input type="file" accept="image/*" onChange={onPostImage} className={postErrors.image_url ? "is-invalid" : ""} />
+              </Field>
+              {postForm.image_url ? <div className="course-cover"><img src={postForm.image_url} alt="" /></div> : <div className="course-cover"><span>{t.courseImageSoon}</span></div>}
               <div className="btn-row">
                 <button className="btn btn-gold" type="submit">{t.savePost}</button>
                 {editingPost ? <button className="btn btn-ghost" type="button" onClick={() => { setEditingPost(""); setPostForm(emptyPost()); setPostErrors({}); }}>{t.close}</button> : null}

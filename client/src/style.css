@@ -1303,6 +1303,18 @@ a.card {
   opacity: 0.5;
 }
 
+.blog-card .cover img,
+.article .cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.blog-card .cover.has-photo::after {
+  display: none;
+}
+
 .blog-card .date {
   font-size: 0.78rem;
   color: var(--gold);
@@ -1323,6 +1335,7 @@ a.card {
   border-radius: 14px;
   margin-bottom: 1.6rem;
   background: linear-gradient(135deg, var(--emerald), var(--gold));
+  overflow: hidden;
 }
 
 .article p {

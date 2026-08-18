@@ -25,7 +25,9 @@ export default function Blog() {
         <div className="wrap grid-3">
           {posts.map((p) => (
             <Link className="card blog-card" to={`/blog/${p.id}`} key={p.id}>
-              <div className="cover" />
+              <div className={`cover${p.image_url ? " has-photo" : ""}`}>
+                {p.image_url ? <img src={p.image_url} alt="" /> : null}
+              </div>
               <p className="date">{p.date_label} · {p.tag}</p>
               <h3>{p.title}</h3>
               <p>{p.excerpt}</p>

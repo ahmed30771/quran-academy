@@ -56,10 +56,6 @@ export default function Login() {
 
   async function onRegister(e) {
     e.preventDefault();
-    if (role === "admin") {
-      showToast(t.loginHint);
-      return;
-    }
     const form = new FormData(e.target);
     const name = String(form.get("name") || "");
     const email = String(form.get("email") || "");
@@ -165,7 +161,7 @@ export default function Login() {
               <button type="button" className={mode === "register" ? "is-on" : ""} onClick={() => switchMode("register")}>{t.register}</button>
             </div>
             <div className="role-tabs">
-              {["student", "teacher", "admin"].map((r) => (
+              {["student", "teacher"].map((r) => (
                 <button key={r} type="button" className={role === r ? "is-on" : ""} onClick={() => setRole(r)}>
                   {t[r]}
                 </button>
@@ -255,7 +251,7 @@ export default function Login() {
                 </fieldset>
               </>
             ) : null}
-            <button className="btn btn-gold" type="submit" disabled={busy || role === "admin"}>{t.createAccount}</button>
+            <button className="btn btn-gold" type="submit" disabled={busy}>{t.createAccount}</button>
           </form>
         ) : null}
 
