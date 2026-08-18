@@ -15,41 +15,47 @@ export default function Footer({ onChat }) {
                 <span className="brand-name" style={{ color: "#fff" }}>Quran Academy</span>
               </Link>
               <p style={{ marginTop: "0.8rem", maxWidth: "18rem" }}>{t.copyNote}</p>
+              <p className="foot-hours">
+                <strong>{t.footHours}</strong>
+                {t.footHoursP}
+              </p>
             </div>
             <div>
               <h4>{t.footCompany}</h4>
               <ul>
                 <li><Link to="/about">{t.about}</Link></li>
+                <li><Link to="/#mission">{t.mission}</Link></li>
                 <li><Link to="/#how">{t.howKicker}</Link></li>
-                <li><Link to="/about#teachers">{t.teachKicker}</Link></li>
-                <li><Link to="/login">{t.login}</Link></li>
+                <li><Link to="/#teachers">{t.teachKicker}</Link></li>
+                <li><Link to="/#events">{t.eventsKicker}</Link></li>
               </ul>
             </div>
             <div>
               <h4>{t.footPrograms}</h4>
               <ul>
-                <li><Link to="/courses#tajweed-kids">{t.cKids}</Link></li>
-                <li><Link to="/courses#nazra">{t.cNazra}</Link></li>
-                <li><Link to="/courses#tajweed-adv">{t.cAdv}</Link></li>
-                <li><Link to="/courses#hifz">{t.cHifz}</Link></li>
-                <li><Link to="/courses#arabic">{t.cArabic}</Link></li>
+                <li><Link to="/courses/noorani-qaida">Noorani Qaida</Link></li>
+                <li><Link to="/courses/nazra">{t.cNazra}</Link></li>
+                <li><Link to="/courses/tajweed-ul-quran">Tajweed-ul-Quran</Link></li>
+                <li><Link to="/courses/hifz">{t.cHifz}</Link></li>
+                <li><Link to="/courses/arabic">{t.cArabic}</Link></li>
+                <li><Link to="/courses">{t.courses}</Link></li>
                 <li><Link to="/fees">{t.fees}</Link></li>
               </ul>
             </div>
             <div>
-              <h4>{t.explore}</h4>
+              <h4>{t.footLearn}</h4>
               <ul>
-                <li><Link to="/">{t.home}</Link></li>
-                <li><Link to="/courses">{t.courses}</Link></li>
-                <li><Link to="/blog">{t.blog}</Link></li>
-                <li><Link to="/#tutorial">{t.tutKicker}</Link></li>
                 <li><Link to="/contact">{t.trial}</Link></li>
+                <li><Link to="/#programs">{t.progFeatKicker}</Link></li>
+                <li><Link to="/blog">{t.blog}</Link></li>
+                <li><Link to="/#faq">{t.faqKicker}</Link></li>
+                <li><Link to="/login">{t.studentLogin}</Link></li>
               </ul>
             </div>
             <div>
               <h4>{t.contact}</h4>
               <ul>
-                <li><a href={SITE.WHATSAPP} target="_blank" rel="noopener">WhatsApp</a></li>
+                <li><a href={SITE.WHATSAPP} target="_blank" rel="noopener">WhatsApp {SITE.PHONE}</a></li>
                 <li><a href={`mailto:${SITE.EMAIL}`}>{SITE.EMAIL}</a></li>
                 <li><Link to="/contact">{t.footForm}</Link></li>
               </ul>
@@ -62,10 +68,10 @@ export default function Footer({ onChat }) {
             <div>
               <h4>{t.footSupport}</h4>
               <ul>
-                <li><Link to="/#faq">{t.faqKicker}</Link></li>
+                <li><Link to="/#preview">{t.previewKicker}</Link></li>
                 <li><button type="button" className="linkish" onClick={onChat} style={{ background: "none", border: 0, color: "inherit", cursor: "pointer", padding: 0, font: "inherit" }}>{t.chatNur}</button></li>
-                <li><Link to="/login">{t.studentLogin}</Link></li>
                 <li><Link to="/login">{t.teachWithUs}</Link></li>
+                <li><Link to="/login">{t.login}</Link></li>
               </ul>
             </div>
           </div>

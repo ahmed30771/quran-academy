@@ -1,22 +1,21 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
+import { audienceLabel, coursePath, levelLabel } from "../helpers";
 
 export default function Courses() {
   const { t, currency, user, showToast } = useApp();
   const nav = useNavigate();
   const [courses, setCourses] = useState([]);
-  const [filter, setFilter] = useState("all");
-  const [modal, setModal] = useState(null);
+  const [audience, setAudience] = useState("all");
+  const [category, setCategory] = useState("all");
+  const [level, setLevel] = useState("all");
   const [busyId, setBusyId] = useState("");
 
   useEffect(() => {
     api("/api/courses").then(setCourses).catch(() => setCourses([]));
   }, []);
-
-  const keys = { "tajweed-kids": "cKids", nazra: "cNazra", "tajweed-adv": "cAdv", hifz: "cHifz", arabic: "cArabic", family: "cFamily" };
-  const full = { "tajweed-kids": "cKidsFull", nazra: "cNazraFull", "tajweed-adv": "cAdvFull", hifz: "cHifzFull", arabic: "cArabicFull", family: "cFamilyFull" };
 
   async function enroll(id) {
     if (!user) return nav("/login");
@@ -28,7 +27,6 @@ export default function Courses() {
       setBusyId(id);
       const res = await api(`/api/courses/${id}/enroll`, { method: "POST", body: { plan: "standard" } });
       showToast(res.already ? "You are already enrolled in this course." : `Enrollment request sent for ${res.course?.title || "this course"}.`);
-      setModal(null);
     } catch (e) {
       showToast(e.message);
     } finally {
@@ -36,7 +34,14 @@ export default function Courses() {
     }
   }
 
-  const shown = courses.filter((c) => filter === "all" || (c.track || "").includes(filter));
+  const shown = courses.filter((c) => {
+    const audiences = c.audiences || [];
+    const levels = c.levels || [];
+    if (audience !== "all" && !audiences.includes(audience)) return false;
+    if (category !== "all" && c.category !== category) return false;
+    if (level !== "all" && !levels.includes(level)) return false;
+    return true;
+  });
 
   return (
     <main>
@@ -50,52 +55,58 @@ export default function Courses() {
       </section>
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap">
-          <div className="chips">
-            {[
-              ["all", t.filterAll],
-              ["kids", t.filterKids],
-              ["adults", t.filterAdults],
-              ["tajweed", t.filterTajweed],
-              ["hifz", t.filterHifz],
-              ["recitation", t.filterRec],
-              ["arabic", t.filterArabic],
-            ].map(([f, label]) => (
-              <button key={f} className={`chip${filter === f ? " is-on" : ""}`} type="button" onClick={() => setFilter(f)}>
-                {label}
-              </button>
-            ))}
+          <div className="filter-groups">
+            <div>
+              <p className="filter-label">{t.filterAudience}</p>
+              <div className="chips">
+                {[["all", t.filterAll], ["kids", t.filterKids], ["adults", t.filterAdults]].map(([f, label]) => (
+                  <button key={f} className={`chip${audience === f ? " is-on" : ""}`} type="button" onClick={() => setAudience(f)}>{label}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="filter-label">{t.filterCategory}</p>
+              <div className="chips">
+                {[["all", t.filterAll], ["tajweed", t.filterTajweed], ["hifz", t.filterHifz], ["recitation", t.filterRec], ["arabic", t.filterArabic]].map(([f, label]) => (
+                  <button key={f} className={`chip${category === f ? " is-on" : ""}`} type="button" onClick={() => setCategory(f)}>{label}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="filter-label">{t.filterLevel}</p>
+              <div className="chips">
+                {[["all", t.filterAll], ["beginner", t.beginner], ["intermediate", t.intermediate], ["advanced", t.advanced]].map(([f, label]) => (
+                  <button key={f} className={`chip${level === f ? " is-on" : ""}`} type="button" onClick={() => setLevel(f)}>{label}</button>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="grid-3">
             {shown.map((c) => (
-              <article className="card course" id={c.id} key={c.id}>
+              <article className="card course" id={c.slug || c.id} key={c.id}>
+                <div className="course-cover">
+                  {c.image_url ? <img src={c.image_url} alt="" /> : <span>{t.courseImageSoon}</span>}
+                </div>
                 <div className="icon-orb">{c.icon || "ق"}</div>
-                <h3>{t[keys[c.id]] || c.title}</h3>
-                <div className="meta"><span>{c.level}</span><span>·</span><span>{c.duration}</span><span>·</span><span>{c.length}</span></div>
-                <p className="price">{formatMoney(c.price_usd, currency)} <span>{t.perMonth}</span></p>
-                <p>{t[full[c.id]] || c.full_blurb}</p>
+                <h3>{c.title}</h3>
+                <div className="meta">
+                  <span>{audienceLabel(c.audiences, t) || t.filterAll}</span>
+                  <span>·</span>
+                  <span>{c.category}</span>
+                  <span>·</span>
+                  <span>{levelLabel(c.levels, t) || c.level}</span>
+                </div>
+                {Number(c.price_usd) > 0 ? <p className="price">{formatMoney(c.price_usd, currency)} <span>{t.perMonth}</span></p> : null}
+                <p>{c.blurb || c.full_blurb}</p>
                 <div className="btn-row">
-                  <button className="btn btn-ghost btn-sm" type="button" onClick={() => setModal(c)}>{t.details}</button>
-                  <button className="btn btn-primary btn-sm" type="button" disabled={busyId === c.id} onClick={() => enroll(c.id)}>{busyId === c.id ? "Sending..." : t.enroll}</button>
+                  <Link className="btn btn-ghost btn-sm" to={coursePath(c)}>{t.viewCourse}</Link>
+                  <button className="btn btn-primary btn-sm" type="button" disabled={busyId === c.id} onClick={() => enroll(c.id)}>{busyId === c.id ? "..." : t.enroll}</button>
                 </div>
               </article>
             ))}
           </div>
         </div>
       </section>
-      {modal ? (
-        <div className="modal-bg open" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
-          <div className="modal">
-            <button className="menu-close modal-x" type="button" onClick={() => setModal(null)}>×</button>
-            <p className="kicker">{t.courseKicker}</p>
-            <h3>{t[keys[modal.id]] || modal.title}</h3>
-            <p>{(t[full[modal.id]] || modal.full_blurb) + " " + (t.modalFee || "").replace("{n}", formatMoney(modal.price_usd, currency))}</p>
-            <div className="btn-row">
-              <button className="btn btn-primary" type="button" disabled={busyId === modal.id} onClick={() => enroll(modal.id)}>{busyId === modal.id ? "Sending..." : t.enroll}</button>
-              <button className="btn btn-ghost" type="button" onClick={() => setModal(null)}>{t.close}</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </main>
   );
 }

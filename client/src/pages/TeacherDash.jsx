@@ -4,21 +4,57 @@ import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
 
 export default function TeacherDash() {
-  const { t, currency, showToast } = useApp();
+  const { t, currency, showToast, user } = useApp();
   const [active, setActive] = useState("today");
   const [data, setData] = useState({ classes: [], students: [], homework: [], stats: {} });
   const [present, setPresent] = useState({});
   const [task, setTask] = useState("");
   const [studentId, setStudentId] = useState("");
 
+  const [mine, setMine] = useState([]);
+  const [catalog, setCatalog] = useState([]);
+  const [teachKids, setTeachKids] = useState(false);
+  const [teachAdults, setTeachAdults] = useState(false);
+  const [teachingLanguages, setTeachingLanguages] = useState("");
+
   function load() {
     api("/api/dash/teacher").then((d) => {
       setData(d);
       setStudentId((prev) => prev || String(d.students[0]?.id || ""));
     }).catch(() => {});
+    api("/api/teachers/me/courses").then(setMine).catch(() => setMine([]));
+    api("/api/courses").then(setCatalog).catch(() => setCatalog([]));
   }
 
   useEffect(load, []);
+
+  useEffect(() => {
+    if (!user) return;
+    setTeachKids(!!user.teachKids);
+    setTeachAdults(!!user.teachAdults);
+    setTeachingLanguages(user.teachingLanguages || "");
+  }, [user]);
+
+  async function saveTeaching(e) {
+    e.preventDefault();
+    try {
+      await api("/api/teachers/me/teaching", { method: "PUT", body: { teachingLanguages, teachKids, teachAdults } });
+      showToast(t.toastProfile);
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
+
+  async function requestCourse(id, on) {
+    try {
+      if (on) await api("/api/teachers/me/courses", { method: "POST", body: { courseIds: [id] } });
+      else await api(`/api/teachers/me/courses/${id}`, { method: "DELETE" });
+      const rows = await api("/api/teachers/me/courses");
+      setMine(rows);
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
 
   async function assignHw(e) {
     e.preventDefault();
@@ -42,6 +78,7 @@ export default function TeacherDash() {
         { key: "today", label: t.today },
         { key: "students", label: t.students },
         { key: "homework", label: t.homework },
+        { key: "teaching", label: t.myTeachingCourses },
         { key: "summary", label: t.summary },
       ]}
     >
@@ -120,6 +157,40 @@ export default function TeacherDash() {
               <li className="mini-row" key={h.id}><span>{h.student}: {h.task}</span><b>{h.due_label}</b></li>
             )) : <li className="mini-row"><span>No homework has been assigned yet.</span><b>Empty</b></li>}
           </ul>
+        </article>
+      ) : null}
+      {active === "teaching" ? (
+        <article className="card">
+          <h3>{t.myTeachingCourses}</h3>
+          <form className="form" onSubmit={saveTeaching} style={{ marginBottom: "1.2rem" }}>
+            <label>
+              <span>{t.teachingLang}</span>
+              <select value={teachingLanguages} onChange={(e) => setTeachingLanguages(e.target.value)}>
+                <option value="">{t.skipCourses}</option>
+                <option value="urdu">{t.langUrdu}</option>
+                <option value="english">{t.langEnglish}</option>
+                <option value="both">{t.langBoth}</option>
+              </select>
+            </label>
+            <fieldset className="check-set">
+              <legend>{t.teachAudience}</legend>
+              <label className="check-row"><input type="checkbox" checked={teachKids} onChange={(e) => setTeachKids(e.target.checked)} /> {t.filterKids}</label>
+              <label className="check-row"><input type="checkbox" checked={teachAdults} onChange={(e) => setTeachAdults(e.target.checked)} /> {t.filterAdults}</label>
+            </fieldset>
+            <button className="btn btn-primary" type="submit">{t.saveProfile}</button>
+          </form>
+          <p className="kicker">{t.manageTeachCourses}</p>
+          <div className="check-grid">
+            {catalog.map((c) => {
+              const row = mine.find((m) => m.course_id === c.id);
+              return (
+                <label className="check-row" key={c.id}>
+                  <input type="checkbox" checked={!!row} onChange={(e) => requestCourse(c.id, e.target.checked)} />
+                  <span>{c.title}{row ? ` · ${row.status === "approved" ? t.approvedCourse : row.status === "rejected" ? t.rejectedCourse : t.pendingCourse}` : ""}</span>
+                </label>
+              );
+            })}
+          </div>
         </article>
       ) : null}
       {active === "summary" ? (

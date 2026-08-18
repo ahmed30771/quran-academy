@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
-import { ago, dashPath, initials } from "../helpers";
+import { ago, dashPath, initials, validatePassword } from "../helpers";
 
 export default function DashShell({ role, searchPlaceholder, navLinks, activeKey, onNavChange, children }) {
   const { t, lang, setLang, currency, setCurrency, user, setUser, ready, showToast } = useApp();
@@ -25,6 +25,10 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
     subjects: "",
     availableTimes: "",
     introduction: "",
+    gender: "",
+    teachingLanguages: "",
+    teachKids: false,
+    teachAdults: false,
   });
   const [settings, setSettings] = useState({
     privacy: "staff",
@@ -54,6 +58,10 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
       subjects: user.subjects || "",
       availableTimes: user.availableTimes || "",
       introduction: user.introduction || "",
+      gender: user.gender || "",
+      teachingLanguages: user.teachingLanguages || "",
+      teachKids: !!user.teachKids,
+      teachAdults: !!user.teachAdults,
     });
     setSettings((s) => ({
       ...s,
@@ -126,6 +134,13 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
 
   async function saveSettings(e) {
     e.preventDefault();
+    if (settings.password) {
+      const passErr = validatePassword(settings.password, t);
+      if (passErr) {
+        showToast(passErr);
+        return;
+      }
+    }
     try {
       const data = await api("/api/profile/settings", { method: "PUT", body: settings });
       setUser(data.user);
@@ -278,6 +293,14 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
               <label><span>Date of birth</span><input type="date" value={profile.dateOfBirth} onChange={(e) => setProfile({ ...profile, dateOfBirth: e.target.value })} /></label>
               <label><span>Preferred language</span><input value={profile.preferredLanguage} onChange={(e) => setProfile({ ...profile, preferredLanguage: e.target.value })} /></label>
               <label><span>Timezone</span><input value={profile.timezone} onChange={(e) => setProfile({ ...profile, timezone: e.target.value })} /></label>
+              <label>
+                <span>{t.gender}</span>
+                <select value={profile.gender} onChange={(e) => setProfile({ ...profile, gender: e.target.value })}>
+                  <option value="">{t.gender}</option>
+                  <option value="male">{t.genderMale}</option>
+                  <option value="female">{t.genderFemale}</option>
+                </select>
+              </label>
               <label><span>{t.profileBio}</span><textarea value={profile.bio} placeholder={t.phBio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} /></label>
               {role !== "student" ? (
                 <>
@@ -285,7 +308,20 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
                   <label><span>Qualifications</span><textarea value={profile.qualifications} onChange={(e) => setProfile({ ...profile, qualifications: e.target.value })} /></label>
                   <label><span>Experience</span><textarea value={profile.experience} onChange={(e) => setProfile({ ...profile, experience: e.target.value })} /></label>
                   <label><span>Subjects / skills</span><textarea value={profile.subjects} onChange={(e) => setProfile({ ...profile, subjects: e.target.value })} /></label>
-                  <label><span>Available times</span><textarea value={profile.availableTimes} onChange={(e) => setProfile({ ...profile, availableTimes: e.target.value })} /></label>
+                  <label>
+                    <span>{t.teachingLang}</span>
+                    <select value={profile.teachingLanguages} onChange={(e) => setProfile({ ...profile, teachingLanguages: e.target.value })}>
+                      <option value="">{t.skipCourses}</option>
+                      <option value="urdu">{t.langUrdu}</option>
+                      <option value="english">{t.langEnglish}</option>
+                      <option value="both">{t.langBoth}</option>
+                    </select>
+                  </label>
+                  <fieldset className="check-set">
+                    <legend>{t.teachAudience}</legend>
+                    <label className="check-row"><input type="checkbox" checked={profile.teachKids} onChange={(e) => setProfile({ ...profile, teachKids: e.target.checked })} /> {t.filterKids}</label>
+                    <label className="check-row"><input type="checkbox" checked={profile.teachAdults} onChange={(e) => setProfile({ ...profile, teachAdults: e.target.checked })} /> {t.filterAdults}</label>
+                  </fieldset>
                 </>
               ) : null}
               <button className="btn btn-primary" type="submit">{t.saveProfile}</button>

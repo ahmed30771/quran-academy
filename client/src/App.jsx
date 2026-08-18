@@ -5,6 +5,8 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
+import TeacherProfile from "./pages/TeacherProfile";
 import Fees from "./pages/Fees";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
@@ -48,6 +50,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/courses" element={<Courses />} />
+          <Route path="/courses/:id" element={<CourseDetail />} />
+          <Route path="/teachers/:id" element={<TeacherProfile />} />
           <Route path="/fees" element={<Fees />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />
