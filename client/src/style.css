@@ -1367,7 +1367,8 @@ textarea {
 
 input.is-invalid,
 select.is-invalid,
-textarea.is-invalid {
+textarea.is-invalid,
+.check-set.is-invalid {
   border-color: #b42318;
 }
 
@@ -1376,6 +1377,11 @@ textarea.is-invalid {
   font-weight: 500;
   font-size: 0.8rem;
   color: #b42318;
+}
+
+.check-set .field-error {
+  display: block;
+  margin-top: 0.4rem;
 }
 
 .auth-forgot {

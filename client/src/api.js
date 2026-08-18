@@ -15,13 +15,29 @@ export function formatMoney(usd, currency) {
 }
 
 export async function api(path, opts = {}) {
-  const res = await fetch(path, {
-    credentials: "include",
-    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
-    ...opts,
-    body: opts.body && typeof opts.body !== "string" ? JSON.stringify(opts.body) : opts.body,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Request failed");
-  return data;
+  try {
+    const headers = { ...(opts.headers || {}) };
+    const hasBody = opts.body !== undefined && opts.body !== null;
+    if (hasBody && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
+    const res = await fetch(path, {
+      credentials: "include",
+      ...opts,
+      headers,
+      body: hasBody && typeof opts.body !== "string" ? JSON.stringify(opts.body) : opts.body,
+    });
+    const text = await res.text();
+    let data = {};
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = {};
+      }
+    }
+    if (!res.ok) throw new Error(data.error || data.message || `Request failed (${res.status})`);
+    return data;
+  } catch (err) {
+    if (err instanceof TypeError) throw new Error("Could not reach the server.");
+    throw err;
+  }
 }

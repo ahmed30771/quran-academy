@@ -39,7 +39,6 @@ export default function Footer({ onChat }) {
                 <li><Link to="/courses/hifz">{t.cHifz}</Link></li>
                 <li><Link to="/courses/arabic">{t.cArabic}</Link></li>
                 <li><Link to="/courses">{t.courses}</Link></li>
-                <li><Link to="/fees">{t.fees}</Link></li>
               </ul>
             </div>
             <div>

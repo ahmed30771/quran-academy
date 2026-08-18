@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
-import { formatMoney, SITE } from "../api";
+import { SITE } from "../api";
 
 export default function Chatbot({ open, onClose, onOpen }) {
-  const { t, lang, currency } = useApp();
+  const { t, lang } = useApp();
   const [msgs, setMsgs] = useState([{ who: "bot", text: t.chatHello }]);
   const [q, setQ] = useState("");
 
@@ -20,12 +20,9 @@ export default function Chatbot({ open, onClose, onOpen }) {
       text = lang === "ur" ? "واٹس ایپ کھل رہا ہے…" : "Opening WhatsApp…";
       window.open(SITE.WHATSAPP, "_blank", "noopener");
     } else if (/fee|price|cost|plan|فیس/.test(s)) {
-      const g = formatMoney(39, currency);
-      const st = formatMoney(69, currency);
-      const h = formatMoney(89, currency);
       text = lang === "ur"
-        ? `پلانز: گروپ ${g}/ماہ، ون ٹو ون ${st}/ماہ، حفظ ${h}/ماہ۔`
-        : `Plans: group from ${g}/mo, 1:1 from ${st}/mo, Hifz from ${h}/mo.`;
+        ? "ہر کورس کی ماہانہ فیس کورسز کے صفحے پر لکھی ہوئی ہے۔"
+        : "Each course lists its monthly fee on the Courses page.";
     } else if (/course|tajweed|hifz|learn|کورس/.test(s)) {
       text = lang === "ur" ? "ہم تجوید، ناظرہ، حفظ اور قرآنی عربی پیش کرتے ہیں۔" : "We offer Tajweed, Nazra, Hifz, and Quranic Arabic.";
     } else if (/trial|free|ٹرائل/.test(s)) {

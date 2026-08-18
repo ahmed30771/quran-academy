@@ -7,7 +7,6 @@ import About from "./pages/About";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import TeacherProfile from "./pages/TeacherProfile";
-import Fees from "./pages/Fees";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Contact from "./pages/Contact";
@@ -24,7 +23,6 @@ function Titles() {
       "/": t.title_home,
       "/about": t.title_about,
       "/courses": t.title_courses,
-      "/fees": t.title_fees,
       "/blog": t.title_blog,
       "/contact": t.title_contact,
       "/login": t.title_login,
@@ -52,7 +50,7 @@ export default function App() {
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetail />} />
           <Route path="/teachers/:id" element={<TeacherProfile />} />
-          <Route path="/fees" element={<Fees />} />
+          <Route path="/fees" element={<Navigate to="/courses" replace />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />

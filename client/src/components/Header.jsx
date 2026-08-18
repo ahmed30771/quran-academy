@@ -61,7 +61,6 @@ export default function Header() {
           <NavLink to="/" end className={({ isActive }) => (isActive ? "is-active" : "")}>{t.home}</NavLink>
           <NavLink to="/about" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.about}</NavLink>
           <NavLink to="/courses" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.courses}</NavLink>
-          <NavLink to="/fees" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.fees}</NavLink>
           <NavLink to="/blog" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.blog}</NavLink>
           <NavLink to="/contact" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.contact}</NavLink>
           <NavLink to={dash} className={({ isActive }) => (isActive ? "is-active" : "")}>{user ? t.overview : t.login}</NavLink>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashShell from "../components/DashShell";
 import { useApp } from "../context/AppContext";
-import { api } from "../api";
+import { api, formatMoney } from "../api";
 
 function emptyCourse() {
   return {
@@ -15,19 +15,54 @@ function emptyCourse() {
     description: "",
     who_for: "",
     learnings: "",
-    duration: "",
+    duration: "Flexible",
+    length: "40 min",
     frequency: "",
     requirements: "",
     icon: "ق",
-    price_usd: 0,
+    price_usd: "",
     sort_order: 0,
     status: "active",
     image_url: "",
   };
 }
 
+function Field({ label, error, children }) {
+  return (
+    <label>
+      <span>{label}</span>
+      {children}
+      {error ? <em className="field-error">{error}</em> : null}
+    </label>
+  );
+}
+
+function validateCourse(form, t) {
+  const title = String(form.title || "").trim();
+  const feeRaw = String(form.price_usd ?? "").trim();
+  const fee = Number(feeRaw);
+  const next = {
+    title: title ? (title.length < 2 ? t.errCourseNameShort : "") : t.errCourseName,
+    audiences: Array.isArray(form.audiences) && form.audiences.length ? "" : t.errCourseAudience,
+    levels: Array.isArray(form.levels) && form.levels.length ? "" : t.errCourseLevel,
+    blurb: String(form.blurb || "").trim() ? "" : t.errCourseBlurb,
+    duration: String(form.duration || "").trim() ? "" : t.errCourseDuration,
+    price_usd: !feeRaw ? t.errCourseFee : Number.isFinite(fee) && fee >= 0 ? "" : t.errCourseFeeNumber,
+    icon: String(form.icon || "").length > 8 ? t.errCourseIcon : "",
+  };
+  return next;
+}
+
+function mapCourseError(message, t) {
+  const s = String(message || "").toLowerCase();
+  if (s.includes("already exists") || s.includes("already uses this name")) return { title: t.errCourseNameExists };
+  if (s.includes("course name")) return { title: t.errCourseName };
+  if (s.includes("image")) return { image_url: t.errCourseImage };
+  return { form: message || t.errCourseName };
+}
+
 export default function AdminDash() {
-  const { t, showToast } = useApp();
+  const { t, showToast, currency } = useApp();
   const [active, setActive] = useState("overview");
   const [data, setData] = useState({
     kpi: { students: 0, teachers: 0, classes: 0 },
@@ -41,6 +76,7 @@ export default function AdminDash() {
   const [catalog, setCatalog] = useState([]);
   const [form, setForm] = useState(emptyCourse);
   const [editing, setEditing] = useState("");
+  const [errors, setErrors] = useState({});
 
   function load() {
     api("/api/dash/admin").then(setData).catch(() => {});
@@ -49,17 +85,46 @@ export default function AdminDash() {
 
   useEffect(load, []);
 
+  function setField(key, value) {
+    setForm((f) => ({ ...f, [key]: value }));
+    setErrors((e) => (e[key] || e.form ? { ...e, [key]: "", form: "" } : e));
+  }
+
   async function saveCourse(e) {
     e.preventDefault();
+    const next = validateCourse(form, t);
+    setErrors(next);
+    if (Object.values(next).some(Boolean)) return;
+    const body = {
+      title: form.title,
+      category: form.category,
+      audiences: form.audiences,
+      levels: form.levels,
+      blurb: form.blurb,
+      intro: form.intro,
+      description: form.description,
+      who_for: form.who_for,
+      learnings: form.learnings,
+      duration: form.duration || "Flexible",
+      length: form.length || "40 min",
+      frequency: form.frequency,
+      requirements: form.requirements,
+      icon: form.icon || "ق",
+      price_usd: Number(form.price_usd) || 0,
+      sort_order: Number(form.sort_order) || 0,
+      status: form.status || "active",
+      image_url: form.image_url || null,
+    };
     try {
-      if (editing) await api(`/api/courses/${editing}`, { method: "PUT", body: form });
-      else await api("/api/courses", { method: "POST", body: form });
+      if (editing) await api(`/api/courses/${editing}`, { method: "PUT", body });
+      else await api("/api/courses", { method: "POST", body });
       showToast(t.saveCourse);
       setForm(emptyCourse());
       setEditing("");
+      setErrors({});
       load();
     } catch (err) {
-      showToast(err.message);
+      setErrors(mapCourseError(err.message, t));
     }
   }
 
@@ -83,21 +148,23 @@ export default function AdminDash() {
 
   function editCourse(c) {
     setEditing(c.id);
+    setErrors({});
     setForm({
       title: c.title || "",
       category: c.category || "recitation",
-      audiences: c.audiences?.length ? c.audiences : ["kids"],
-      levels: c.levels?.length ? c.levels : ["beginner"],
+      audiences: Array.isArray(c.audiences) && c.audiences.length ? c.audiences : ["kids"],
+      levels: Array.isArray(c.levels) && c.levels.length ? c.levels : ["beginner"],
       blurb: c.blurb || "",
       intro: c.intro || "",
       description: c.description || "",
       who_for: c.who_for || "",
       learnings: c.learnings || "",
-      duration: c.duration || "",
+      duration: c.duration || "Flexible",
+      length: c.length || "40 min",
       frequency: c.frequency || "",
       requirements: c.requirements || "",
       icon: c.icon || "ق",
-      price_usd: c.price_usd || 0,
+      price_usd: c.price_usd === 0 || c.price_usd ? c.price_usd : "",
       sort_order: c.sort_order || 0,
       status: c.status || "active",
       image_url: c.image_url || "",
@@ -107,18 +174,21 @@ export default function AdminDash() {
 
   function toggleList(key, value) {
     setForm((f) => {
-      const list = f[key].includes(value) ? f[key].filter((v) => v !== value) : [...f[key], value];
-      return { ...f, [key]: list.length ? list : [value] };
+      const current = Array.isArray(f[key]) ? f[key] : [];
+      const list = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+      return { ...f, [key]: list };
     });
+    setErrors((e) => (e[key] ? { ...e, [key]: "" } : e));
   }
 
   function onImage(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 1500000) {
-      showToast("Image must be under 1.5 MB.");
+    if (file.size > 1000000) {
+      setErrors((e) => ({ ...e, image_url: t.errCourseImage }));
       return;
     }
+    setErrors((e) => ({ ...e, image_url: "" }));
     const reader = new FileReader();
     reader.onload = () => setForm((f) => ({ ...f, image_url: String(reader.result || "") }));
     reader.readAsDataURL(file);
@@ -247,18 +317,20 @@ export default function AdminDash() {
         <>
           <article className="card">
             <h3>{editing ? t.editCourse : t.newCourse}</h3>
-            <form className="form" onSubmit={saveCourse}>
-              <label><span>{t.courseName}</span><input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
-              <label>
-                <span>{t.filterCategory}</span>
-                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+            <form className="form" onSubmit={saveCourse} noValidate>
+              {errors.form ? <em className="field-error">{errors.form}</em> : null}
+              <Field label={t.courseName} error={errors.title}>
+                <input value={form.title} onChange={(e) => setField("title", e.target.value)} className={errors.title ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.filterCategory} error={errors.category}>
+                <select value={form.category} onChange={(e) => setField("category", e.target.value)} className={errors.category ? "is-invalid" : ""}>
                   <option value="tajweed">{t.filterTajweed}</option>
                   <option value="hifz">{t.filterHifz}</option>
                   <option value="recitation">{t.filterRec}</option>
                   <option value="arabic">{t.filterArabic}</option>
                 </select>
-              </label>
-              <fieldset className="check-set">
+              </Field>
+              <fieldset className={`check-set${errors.audiences ? " is-invalid" : ""}`}>
                 <legend>{t.filterAudience}</legend>
                 {["kids", "adults"].map((a) => (
                   <label className="check-row" key={a}>
@@ -266,8 +338,9 @@ export default function AdminDash() {
                     {a === "kids" ? t.filterKids : t.filterAdults}
                   </label>
                 ))}
+                {errors.audiences ? <em className="field-error">{errors.audiences}</em> : null}
               </fieldset>
-              <fieldset className="check-set">
+              <fieldset className={`check-set${errors.levels ? " is-invalid" : ""}`}>
                 <legend>{t.filterLevel}</legend>
                 {["beginner", "intermediate", "advanced"].map((lv) => (
                   <label className="check-row" key={lv}>
@@ -275,36 +348,65 @@ export default function AdminDash() {
                     {lv === "beginner" ? t.beginner : lv === "intermediate" ? t.intermediate : t.advanced}
                   </label>
                 ))}
+                {errors.levels ? <em className="field-error">{errors.levels}</em> : null}
               </fieldset>
-              <label><span>{t.shortDesc}</span><textarea value={form.blurb} onChange={(e) => setForm({ ...form, blurb: e.target.value })} /></label>
-              <label><span>{t.courseIntro}</span><textarea value={form.intro} onChange={(e) => setForm({ ...form, intro: e.target.value })} /></label>
-              <label><span>{t.courseDesc}</span><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-              <label><span>{t.whoFor}</span><textarea value={form.who_for} onChange={(e) => setForm({ ...form, who_for: e.target.value })} /></label>
-              <label><span>{t.willLearn}</span><textarea value={form.learnings} onChange={(e) => setForm({ ...form, learnings: e.target.value })} /></label>
-              <label><span>{t.courseDuration}</span><input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} /></label>
-              <label><span>{t.classFrequency}</span><input value={form.frequency} onChange={(e) => setForm({ ...form, frequency: e.target.value })} /></label>
-              <label><span>{t.courseReqs}</span><textarea value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} /></label>
-              <label><span>{t.courseIcon}</span><input value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} /></label>
-              <label>
-                <span>{t.courseImage}</span>
-                <input type="file" accept="image/*" onChange={onImage} />
-              </label>
+              <Field label={t.shortDesc} error={errors.blurb}>
+                <textarea value={form.blurb} onChange={(e) => setField("blurb", e.target.value)} className={errors.blurb ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.courseIntro} error={errors.intro}>
+                <textarea value={form.intro} onChange={(e) => setField("intro", e.target.value)} className={errors.intro ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.courseDesc} error={errors.description}>
+                <textarea value={form.description} onChange={(e) => setField("description", e.target.value)} className={errors.description ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.whoFor} error={errors.who_for}>
+                <textarea value={form.who_for} onChange={(e) => setField("who_for", e.target.value)} className={errors.who_for ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.willLearn} error={errors.learnings}>
+                <textarea value={form.learnings} onChange={(e) => setField("learnings", e.target.value)} className={errors.learnings ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.courseDuration} error={errors.duration}>
+                <input value={form.duration} onChange={(e) => setField("duration", e.target.value)} className={errors.duration ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.classFrequency} error={errors.frequency}>
+                <input value={form.frequency} onChange={(e) => setField("frequency", e.target.value)} className={errors.frequency ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.courseFee} error={errors.price_usd}>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.price_usd}
+                  onChange={(e) => setField("price_usd", e.target.value)}
+                  className={errors.price_usd ? "is-invalid" : ""}
+                />
+              </Field>
+              <Field label={t.courseReqs} error={errors.requirements}>
+                <textarea value={form.requirements} onChange={(e) => setField("requirements", e.target.value)} className={errors.requirements ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.courseIcon} error={errors.icon}>
+                <input value={form.icon} onChange={(e) => setField("icon", e.target.value)} className={errors.icon ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.courseImage} error={errors.image_url}>
+                <input type="file" accept="image/*" onChange={onImage} className={errors.image_url ? "is-invalid" : ""} />
+              </Field>
               {form.image_url ? <div className="course-cover"><img src={form.image_url} alt="" /></div> : <div className="course-cover"><span>{t.courseImageSoon}</span></div>}
               <div className="btn-row">
                 <button className="btn btn-gold" type="submit">{t.saveCourse}</button>
-                {editing ? <button className="btn btn-ghost" type="button" onClick={() => { setEditing(""); setForm(emptyCourse()); }}>{t.close}</button> : null}
+                {editing ? <button className="btn btn-ghost" type="button" onClick={() => { setEditing(""); setForm(emptyCourse()); setErrors({}); }}>{t.close}</button> : null}
               </div>
             </form>
           </article>
           <article className="card" style={{ marginTop: "1.2rem" }}>
             <h3>{t.adminCourses}</h3>
             <table className="table">
-              <thead><tr><th>{t.courseName}</th><th>{t.filterCategory}</th><th>{t.thStatus}</th><th /></tr></thead>
+              <thead><tr><th>{t.courseName}</th><th>{t.filterCategory}</th><th>{t.courseFee}</th><th>{t.thStatus}</th><th /></tr></thead>
               <tbody>
                 {catalog.map((c) => (
                   <tr key={c.id}>
                     <td>{c.title}</td>
                     <td>{c.category}</td>
+                    <td>{Number(c.price_usd) > 0 ? formatMoney(c.price_usd, currency) : "—"}</td>
                     <td>{c.status === "active" ? t.courseActive : t.courseInactive}</td>
                     <td>
                       <button className="btn btn-primary btn-sm" type="button" onClick={() => editCourse(c)}>{t.editCourse}</button>
