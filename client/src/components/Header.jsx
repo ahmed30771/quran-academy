@@ -28,10 +28,10 @@ export default function Header() {
 
   const dash = user
     ? user.role === "admin"
-      ? "/admin"
+      ? "/admin/dashboard"
       : user.role === "teacher"
-        ? "/teacher"
-        : "/student"
+        ? "/teacher/dashboard"
+        : "/student/dashboard"
     : "/login";
 
   const cls = ["site-header", scrolled && "is-scrolled", hot && "is-hot"].filter(Boolean).join(" ");

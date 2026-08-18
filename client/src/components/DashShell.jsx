@@ -12,7 +12,20 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
   const [acctOpen, setAcctOpen] = useState(false);
   const [notes, setNotes] = useState([]);
   const [modal, setModal] = useState(null);
-  const [profile, setProfile] = useState({ name: "", email: "", bio: "" });
+  const [profile, setProfile] = useState({
+    name: "",
+    email: "",
+    bio: "",
+    phoneNumber: "",
+    dateOfBirth: "",
+    preferredLanguage: "en",
+    timezone: "UTC",
+    qualifications: "",
+    experience: "",
+    subjects: "",
+    availableTimes: "",
+    introduction: "",
+  });
   const [settings, setSettings] = useState({
     privacy: "staff",
     showEmail: true,
@@ -28,7 +41,20 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
 
   useEffect(() => {
     if (!user) return;
-    setProfile({ name: user.name || "", email: user.email || "", bio: user.bio || "" });
+    setProfile({
+      name: user.name || "",
+      email: user.email || "",
+      bio: user.bio || "",
+      phoneNumber: user.phoneNumber || "",
+      dateOfBirth: user.dateOfBirth ? String(user.dateOfBirth).slice(0, 10) : "",
+      preferredLanguage: user.preferredLanguage || "en",
+      timezone: user.timezone || "UTC",
+      qualifications: user.qualifications || "",
+      experience: user.experience || "",
+      subjects: user.subjects || "",
+      availableTimes: user.availableTimes || "",
+      introduction: user.introduction || "",
+    });
     setSettings((s) => ({
       ...s,
       privacy: user.privacy || "staff",
@@ -248,7 +274,20 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
               </div>
               <label><span>{t.fullName}</span><input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required /></label>
               <label><span>{t.fldEmail}</span><input type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} required /></label>
+              <label><span>Phone number</span><input value={profile.phoneNumber} onChange={(e) => setProfile({ ...profile, phoneNumber: e.target.value })} /></label>
+              <label><span>Date of birth</span><input type="date" value={profile.dateOfBirth} onChange={(e) => setProfile({ ...profile, dateOfBirth: e.target.value })} /></label>
+              <label><span>Preferred language</span><input value={profile.preferredLanguage} onChange={(e) => setProfile({ ...profile, preferredLanguage: e.target.value })} /></label>
+              <label><span>Timezone</span><input value={profile.timezone} onChange={(e) => setProfile({ ...profile, timezone: e.target.value })} /></label>
               <label><span>{t.profileBio}</span><textarea value={profile.bio} placeholder={t.phBio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} /></label>
+              {role !== "student" ? (
+                <>
+                  <label><span>Introduction</span><textarea value={profile.introduction} onChange={(e) => setProfile({ ...profile, introduction: e.target.value })} /></label>
+                  <label><span>Qualifications</span><textarea value={profile.qualifications} onChange={(e) => setProfile({ ...profile, qualifications: e.target.value })} /></label>
+                  <label><span>Experience</span><textarea value={profile.experience} onChange={(e) => setProfile({ ...profile, experience: e.target.value })} /></label>
+                  <label><span>Subjects / skills</span><textarea value={profile.subjects} onChange={(e) => setProfile({ ...profile, subjects: e.target.value })} /></label>
+                  <label><span>Available times</span><textarea value={profile.availableTimes} onChange={(e) => setProfile({ ...profile, availableTimes: e.target.value })} /></label>
+                </>
+              ) : null}
               <button className="btn btn-primary" type="submit">{t.saveProfile}</button>
             </form>
           </div>

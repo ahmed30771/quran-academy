@@ -20,7 +20,7 @@ export function ago(iso) {
 
 export function dashPath(user) {
   if (!user) return "/login";
-  if (user.role === "admin") return "/admin";
-  if (user.role === "teacher") return "/teacher";
-  return "/student";
+  if (user.role === "admin") return "/admin/dashboard";
+  if (user.role === "teacher") return "/teacher/dashboard";
+  return "/student/dashboard";
 }

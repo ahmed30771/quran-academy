@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Navigate, Routes, Route, useLocation } from "react-router-dom";
 import { useApp } from "./context/AppContext";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
@@ -27,8 +27,11 @@ function Titles() {
       "/contact": t.title_contact,
       "/login": t.title_login,
       "/student": t.title_student,
+      "/student/dashboard": t.title_student,
       "/teacher": t.title_teacher,
+      "/teacher/dashboard": t.title_teacher,
       "/admin": t.title_admin,
+      "/admin/dashboard": t.title_admin,
     };
     document.title = pathname.startsWith("/blog/") ? t.title_post : (map[pathname] || "Quran Academy");
     window.scrollTo(0, 0);
@@ -50,9 +53,12 @@ export default function App() {
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/student" element={<StudentDash />} />
-          <Route path="/teacher" element={<TeacherDash />} />
-          <Route path="/admin" element={<AdminDash />} />
+          <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
+          <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/student/dashboard" element={<StudentDash />} />
+          <Route path="/teacher/dashboard" element={<TeacherDash />} />
+          <Route path="/admin/dashboard" element={<AdminDash />} />
         </Route>
       </Routes>
     </>

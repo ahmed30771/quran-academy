@@ -1,8 +1,9 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { queryOne } from "../db.js";
+import { query, queryOne } from "../db.js";
 import { signToken, publicUser, cookieOpts, readToken } from "../middleware/auth.js";
+import { recordAudit } from "../middleware/ownership.js";
 
 const router = express.Router();
 const ROUNDS = 12;
@@ -21,6 +22,7 @@ router.post("/register", async (req, res) => {
        RETURNING *`,
       [chosen, name.trim(), email.trim().toLowerCase(), password_hash, chosen === "teacher" ? "pending" : "active"]
     );
+    await recordAudit(user.id, "user.registered", "user", user.id, { role: user.role });
     const token = signToken(user);
     res.cookie("token", token, cookieOpts);
     res.json({ user: publicUser(user) });
@@ -39,9 +41,11 @@ router.post("/login", async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: "Email or password is incorrect." });
     }
+    await query("UPDATE users SET last_login=NOW(), updated_at=NOW() WHERE id=$1", [user.id]);
+    await recordAudit(user.id, "user.login", "user", user.id, { role: user.role });
     const token = signToken(user);
     res.cookie("token", token, cookieOpts);
-    res.json({ user: publicUser(user) });
+    res.json({ user: publicUser({ ...user, last_login: new Date().toISOString() }) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not sign in. Check the database connection." });

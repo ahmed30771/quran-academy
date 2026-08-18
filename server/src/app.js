@@ -9,6 +9,12 @@ import courseRoutes from "./routes/courses.js";
 import contactRoutes from "./routes/contact.js";
 import blogRoutes from "./routes/blog.js";
 import dashRoutes from "./routes/dash.js";
+import studentRoutes from "./routes/students.js";
+import teacherRoutes from "./routes/teachers.js";
+import attendanceRoutes from "./routes/attendance.js";
+import progressRoutes from "./routes/progress.js";
+import assignmentRoutes from "./routes/assignments.js";
+import notificationRoutes from "./routes/notifications.js";
 
 dotenv.config();
 
@@ -74,6 +80,12 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/dash", dashRoutes);
+app.use("/api/students", studentRoutes);
+app.use("/api/teachers", teacherRoutes);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/progress", progressRoutes);
+app.use("/api/assignments", assignmentRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

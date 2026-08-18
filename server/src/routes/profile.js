@@ -11,10 +11,41 @@ router.get("/", authRequired, async (req, res) => {
 });
 
 router.put("/", authRequired, async (req, res) => {
-  const { name, email, bio } = req.body || {};
+  const {
+    name,
+    email,
+    bio,
+    phoneNumber,
+    dateOfBirth,
+    preferredLanguage,
+    timezone,
+    qualifications,
+    experience,
+    subjects,
+    availableTimes,
+    introduction,
+  } = req.body || {};
   const user = await queryOne(
-    "UPDATE users SET name=$1, email=$2, bio=$3 WHERE id=$4 RETURNING *",
-    [name, email, bio || "", req.user.id]
+    `UPDATE users
+     SET name=$1, email=$2, bio=$3, phone_number=$4, date_of_birth=$5, preferred_language=$6, timezone=$7,
+         qualifications=$8, experience=$9, subjects=$10, available_times=$11, introduction=$12, updated_at=NOW()
+     WHERE id=$13
+     RETURNING *`,
+    [
+      name,
+      email,
+      bio || "",
+      phoneNumber || "",
+      dateOfBirth || null,
+      preferredLanguage || "en",
+      timezone || "UTC",
+      qualifications || "",
+      experience || "",
+      subjects || "",
+      availableTimes || "",
+      introduction || "",
+      req.user.id,
+    ]
   );
   res.json({ user: publicUser(user) });
 });
