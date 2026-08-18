@@ -16,8 +16,8 @@ function emptyCourse() {
     description: "",
     who_for: "",
     learnings: "",
-    duration: "Flexible",
-    length: "40 min",
+    duration: "",
+    length: "",
     frequency: "",
     requirements: "",
     icon: "ق",
@@ -147,8 +147,8 @@ export default function AdminDash() {
       description: form.description,
       who_for: form.who_for,
       learnings: form.learnings,
-      duration: form.duration || "Flexible",
-      length: form.length || "40 min",
+      duration: String(form.duration || "").trim(),
+      length: String(form.length || "").trim() || String(form.duration || "").trim(),
       frequency: form.frequency,
       requirements: form.requirements,
       icon: form.icon || "ق",
@@ -220,8 +220,8 @@ export default function AdminDash() {
       description: c.description || "",
       who_for: c.who_for || "",
       learnings: c.learnings || "",
-      duration: c.duration || "Flexible",
-      length: c.length || "40 min",
+      duration: c.duration || "",
+      length: c.length || "",
       frequency: c.frequency || "",
       requirements: c.requirements || "",
       icon: c.icon || "ق",
@@ -497,7 +497,10 @@ export default function AdminDash() {
                 <textarea value={form.learnings} onChange={(e) => setField("learnings", e.target.value)} className={errors.learnings ? "is-invalid" : ""} />
               </Field>
               <Field label={t.courseDuration} error={errors.duration}>
-                <input value={form.duration} onChange={(e) => setField("duration", e.target.value)} className={errors.duration ? "is-invalid" : ""} />
+                <input value={form.duration} onChange={(e) => setField("duration", e.target.value)} className={errors.duration ? "is-invalid" : ""} placeholder="6 months" />
+              </Field>
+              <Field label={t.classLength} error={errors.length}>
+                <input value={form.length} onChange={(e) => setField("length", e.target.value)} className={errors.length ? "is-invalid" : ""} placeholder="40 min" />
               </Field>
               <Field label={t.classFrequency} error={errors.frequency}>
                 <input value={form.frequency} onChange={(e) => setField("frequency", e.target.value)} className={errors.frequency ? "is-invalid" : ""} />

@@ -79,7 +79,7 @@ export default function CourseDetail() {
             </article>
             <article className="card">
               <h3>{t.courseDuration}</h3>
-              <p>{[course.duration, course.length].filter(Boolean).join(" · ") || "—"}</p>
+              <p>{[...new Set([course.duration, course.length].filter(Boolean))].join(" · ") || "—"}</p>
             </article>
             <article className="card">
               <h3>{t.classFrequency}</h3>

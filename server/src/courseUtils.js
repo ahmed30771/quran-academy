@@ -43,8 +43,8 @@ export function coursePayload(body = {}) {
   const slug = slugify(body.slug || title) || slugify(`course-${Date.now()}`);
   const audiences = asList(body.audiences, AUDIENCES);
   const levels = asList(body.levels, LEVELS);
-  const duration = asText(body.duration, "Flexible").slice(0, 64);
-  const length = asText(typeof body.length === "string" ? body.length : body.class_length, duration === "Flexible" ? "40 min" : duration).slice(0, 64);
+  const duration = asText(body.duration).slice(0, 64);
+  const length = asText(typeof body.length === "string" ? body.length : body.class_length, duration).slice(0, 64);
   const price = Number(body.price_usd);
   return {
     title,
