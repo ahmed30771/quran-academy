@@ -61,6 +61,29 @@ function mapCourseError(message, t) {
   return { form: message || t.errCourseName };
 }
 
+function emptyPost() {
+  return { title: "", tag: "", excerpt: "", body: "" };
+}
+
+function validatePost(form, t) {
+  return {
+    title: String(form.title || "").trim() ? "" : t.errBlogTitle,
+    tag: String(form.tag || "").trim() ? "" : t.errBlogTag,
+    excerpt: String(form.excerpt || "").trim() ? "" : t.errBlogExcerpt,
+    body: String(form.body || "").trim() ? "" : t.errBlogBody,
+  };
+}
+
+function mapPostError(message, t) {
+  const s = String(message || "").toLowerCase();
+  if (s.includes("already exists")) return { title: t.errBlogExists };
+  if (s.includes("title")) return { title: t.errBlogTitle };
+  if (s.includes("tag")) return { tag: t.errBlogTag };
+  if (s.includes("excerpt")) return { excerpt: t.errBlogExcerpt };
+  if (s.includes("write the post") || s.includes("body")) return { body: t.errBlogBody };
+  return { form: message || t.errBlogTitle };
+}
+
 export default function AdminDash() {
   const { t, showToast, currency } = useApp();
   const [active, setActive] = useState("overview");
@@ -78,20 +101,29 @@ export default function AdminDash() {
   const [editing, setEditing] = useState("");
   const [errors, setErrors] = useState({});
   const [menuId, setMenuId] = useState("");
+  const [posts, setPosts] = useState([]);
+  const [postForm, setPostForm] = useState(emptyPost);
+  const [editingPost, setEditingPost] = useState("");
+  const [postErrors, setPostErrors] = useState({});
+  const [postMenuId, setPostMenuId] = useState("");
 
   function load() {
     api("/api/dash/admin").then(setData).catch(() => {});
     api("/api/courses?all=1").then(setCatalog).catch(() => setCatalog([]));
+    api("/api/blog").then(setPosts).catch(() => setPosts([]));
   }
 
   useEffect(load, []);
 
   useEffect(() => {
-    if (!menuId) return;
-    const close = () => setMenuId("");
+    if (!menuId && !postMenuId) return;
+    const close = () => {
+      setMenuId("");
+      setPostMenuId("");
+    };
     window.addEventListener("click", close);
     return () => window.removeEventListener("click", close);
-  }, [menuId]);
+  }, [menuId, postMenuId]);
 
   function setField(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -197,6 +229,64 @@ export default function AdminDash() {
       image_url: c.image_url || "",
     });
     setActive("courses");
+  }
+
+  function setPostField(key, value) {
+    setPostForm((f) => ({ ...f, [key]: value }));
+    setPostErrors((e) => (e[key] || e.form ? { ...e, [key]: "", form: "" } : e));
+  }
+
+  async function savePost(e) {
+    e.preventDefault();
+    const next = validatePost(postForm, t);
+    setPostErrors(next);
+    if (Object.values(next).some(Boolean)) return;
+    try {
+      if (editingPost) await api(`/api/blog/${encodeURIComponent(editingPost)}/save`, { method: "POST", body: postForm });
+      else await api("/api/blog", { method: "POST", body: postForm });
+      showToast(t.savePost);
+      setPostForm(emptyPost());
+      setEditingPost("");
+      setPostErrors({});
+      load();
+    } catch (err) {
+      setPostErrors(mapPostError(err.message, t));
+    }
+  }
+
+  async function editPost(p) {
+    setPostMenuId("");
+    try {
+      const full = await api(`/api/blog/${encodeURIComponent(p.id)}`);
+      setEditingPost(full.id);
+      setPostForm({
+        title: full.title || "",
+        tag: full.tag || "",
+        excerpt: full.excerpt || "",
+        body: full.body || "",
+      });
+      setPostErrors({});
+      setActive("blog");
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
+
+  async function deletePost(p) {
+    if (!window.confirm(t.confirmDeletePost)) return;
+    try {
+      setPostMenuId("");
+      await api(`/api/blog/${encodeURIComponent(p.id)}/delete`, { method: "POST" });
+      if (editingPost === p.id) {
+        setEditingPost("");
+        setPostForm(emptyPost());
+        setPostErrors({});
+      }
+      showToast(t.deletePost);
+      load();
+    } catch (err) {
+      showToast(err.message);
+    }
   }
 
   function toggleList(key, value) {
@@ -465,15 +555,65 @@ export default function AdminDash() {
         </>
       ) : null}
       {active === "blog" ? (
-        <article className="card" id="blog">
-          <h3>{t.blogPosts}</h3>
-          <ul style={{ display: "grid", gap: "0.5rem", marginTop: "0.8rem" }}>
-            {data.posts.map((p) => (
-              <li key={p.id}><Link to={`/blog/${p.id}`}>{p.title}</Link></li>
-            ))}
-            <li><Link to="/blog">{t.seeAll}</Link></li>
-          </ul>
-        </article>
+        <>
+          <article className="card" id="blog">
+            <h3>{editingPost ? t.editPost : t.newPost}</h3>
+            <form className="form" onSubmit={savePost} noValidate>
+              {postErrors.form ? <em className="field-error">{postErrors.form}</em> : null}
+              <Field label={t.postTitle} error={postErrors.title}>
+                <input value={postForm.title} onChange={(e) => setPostField("title", e.target.value)} className={postErrors.title ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.blogTag} error={postErrors.tag}>
+                <input value={postForm.tag} onChange={(e) => setPostField("tag", e.target.value)} className={postErrors.tag ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.blogExcerpt} error={postErrors.excerpt}>
+                <textarea value={postForm.excerpt} onChange={(e) => setPostField("excerpt", e.target.value)} className={postErrors.excerpt ? "is-invalid" : ""} />
+              </Field>
+              <Field label={t.blogBody} error={postErrors.body}>
+                <textarea value={postForm.body} onChange={(e) => setPostField("body", e.target.value)} className={postErrors.body ? "is-invalid" : ""} />
+              </Field>
+              <div className="btn-row">
+                <button className="btn btn-gold" type="submit">{t.savePost}</button>
+                {editingPost ? <button className="btn btn-ghost" type="button" onClick={() => { setEditingPost(""); setPostForm(emptyPost()); setPostErrors({}); }}>{t.close}</button> : null}
+              </div>
+            </form>
+          </article>
+          <article className="card" style={{ marginTop: "1.2rem" }}>
+            <h3>{t.blogPosts}</h3>
+            <table className="table">
+              <thead><tr><th>{t.postTitle}</th><th>{t.blogTag}</th><th /></tr></thead>
+              <tbody>
+                {posts.map((p) => (
+                  <tr key={p.id}>
+                    <td><Link to={`/blog/${p.id}`}>{p.title}</Link></td>
+                    <td>{p.tag}</td>
+                    <td>
+                      <div className="row-menu">
+                        <button
+                          className="row-menu-btn"
+                          type="button"
+                          aria-label="Post actions"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPostMenuId(postMenuId === p.id ? "" : p.id);
+                          }}
+                        >
+                          ⋯
+                        </button>
+                        {postMenuId === p.id ? (
+                          <div className="row-menu-list" onClick={(e) => e.stopPropagation()}>
+                            <button type="button" onClick={() => editPost(p)}>{t.editPost}</button>
+                            <button type="button" className="is-danger" onClick={() => deletePost(p)}>{t.deletePost}</button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </article>
+        </>
       ) : null}
     </DashShell>
   );
