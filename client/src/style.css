@@ -1287,7 +1287,9 @@ a.card {
 
 /* Blog */
 .blog-card .cover {
-  height: 150px;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
   border-radius: 14px;
   margin-bottom: 1rem;
   background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-mid) 50%, var(--gold) 100%);
@@ -1331,7 +1333,9 @@ a.card {
 }
 
 .article .cover {
-  height: 200px;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
   border-radius: 14px;
   margin-bottom: 1.6rem;
   background: linear-gradient(135deg, var(--emerald), var(--gold));
@@ -2382,7 +2386,9 @@ textarea.is-invalid,
 }
 
 .course-cover {
-  height: 140px;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
   border-radius: 14px;
   background: var(--sage);
   border: 1px dashed rgba(201, 162, 39, 0.45);
@@ -2401,7 +2407,9 @@ textarea.is-invalid,
 }
 
 .course-cover-lg {
-  height: 220px;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
   margin-bottom: 1.2rem;
 }
 

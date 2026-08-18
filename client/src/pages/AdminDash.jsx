@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import DashShell from "../components/DashShell";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
+import { COVER_MAX_BYTES, readCoverAsDataUrl } from "../helpers";
 
 function emptyCourse() {
   return {
@@ -300,30 +301,36 @@ export default function AdminDash() {
     setErrors((e) => (e[key] ? { ...e, [key]: "" } : e));
   }
 
-  function onImage(e) {
+  async function onImage(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 1000000) {
-      setErrors((e) => ({ ...e, image_url: t.errCourseImage }));
+    if (file.size > COVER_MAX_BYTES) {
+      setErrors((prev) => ({ ...prev, image_url: t.errCourseImage }));
       return;
     }
-    setErrors((e) => ({ ...e, image_url: "" }));
-    const reader = new FileReader();
-    reader.onload = () => setForm((f) => ({ ...f, image_url: String(reader.result || "") }));
-    reader.readAsDataURL(file);
+    try {
+      const image_url = await readCoverAsDataUrl(file);
+      setForm((f) => ({ ...f, image_url }));
+      setErrors((prev) => ({ ...prev, image_url: "" }));
+    } catch {
+      setErrors((prev) => ({ ...prev, image_url: t.errCourseImage }));
+    }
   }
 
-  function onPostImage(e) {
+  async function onPostImage(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 1000000) {
-      setPostErrors((err) => ({ ...err, image_url: t.errCourseImage }));
+    if (file.size > COVER_MAX_BYTES) {
+      setPostErrors((prev) => ({ ...prev, image_url: t.errCourseImage }));
       return;
     }
-    setPostErrors((err) => ({ ...err, image_url: "" }));
-    const reader = new FileReader();
-    reader.onload = () => setPostForm((f) => ({ ...f, image_url: String(reader.result || "") }));
-    reader.readAsDataURL(file);
+    try {
+      const image_url = await readCoverAsDataUrl(file);
+      setPostForm((f) => ({ ...f, image_url }));
+      setPostErrors((prev) => ({ ...prev, image_url: "" }));
+    } catch {
+      setPostErrors((prev) => ({ ...prev, image_url: t.errCourseImage }));
+    }
   }
   async function decide(id, approve) {
     try {

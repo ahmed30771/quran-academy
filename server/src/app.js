@@ -55,7 +55,7 @@ app.use((req, res, next) => {
   express.json({ limit: "4mb" })(req, res, (err) => {
     if (!err) return next();
     if (err.type === "entity.too.large") {
-      return res.status(413).json({ error: "Image is too large. Please use a file under 1 MB." });
+      return res.status(413).json({ error: "Image is too large. Please use a file under 2 MB." });
     }
     return res.status(400).json({ error: err.message || "Invalid request body." });
   });

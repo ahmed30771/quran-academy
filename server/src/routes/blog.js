@@ -46,8 +46,8 @@ router.post("/", authRequired, requireRole("admin"), async (req, res) => {
     if (!data.tag) return res.status(400).json({ error: "Please enter a tag." });
     if (!data.excerpt) return res.status(400).json({ error: "Please enter a short excerpt." });
     if (!data.body) return res.status(400).json({ error: "Please write the post." });
-    if (data.image_url && data.image_url.length > 1400000) {
-      return res.status(413).json({ error: "Image is too large. Please use a file under 1 MB." });
+    if (data.image_url && data.image_url.length > 2800000) {
+      return res.status(413).json({ error: "Image is too large. Please use a file under 2 MB." });
     }
     const exists = await queryOne("SELECT id FROM blog_posts WHERE id=$1", [data.slug]);
     if (exists) return res.status(409).json({ error: "A post with this title already exists." });
@@ -72,8 +72,8 @@ router.post("/:id/save", authRequired, requireRole("admin"), async (req, res) =>
     if (!data.tag) return res.status(400).json({ error: "Please enter a tag." });
     if (!data.excerpt) return res.status(400).json({ error: "Please enter a short excerpt." });
     if (!data.body) return res.status(400).json({ error: "Please write the post." });
-    if (data.image_url && data.image_url.length > 1400000) {
-      return res.status(413).json({ error: "Image is too large. Please use a file under 1 MB." });
+    if (data.image_url && data.image_url.length > 2800000) {
+      return res.status(413).json({ error: "Image is too large. Please use a file under 2 MB." });
     }
     const row = await queryOne(
       `UPDATE blog_posts SET title=$1, date_label=$2, tag=$3, excerpt=$4, body=$5, image_url=$6

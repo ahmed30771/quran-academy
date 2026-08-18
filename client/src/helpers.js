@@ -73,6 +73,46 @@ export function levelLabel(list, t) {
   const map = { beginner: t.beginner, intermediate: t.intermediate, advanced: t.advanced };
   return items.map((l) => map[l] || l).join(" · ");
 }
+
+export const COVER_MAX_BYTES = 2 * 1024 * 1024;
+
+export function readCoverAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) return reject(new Error("too-large"));
+    if (file.size > COVER_MAX_BYTES) return reject(new Error("too-large"));
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const ratio = 16 / 9;
+      let sx = 0;
+      let sy = 0;
+      let sw = img.width;
+      let sh = img.height;
+      if (sw / sh > ratio) {
+        sw = img.height * ratio;
+        sx = (img.width - sw) / 2;
+      } else {
+        sh = img.width / ratio;
+        sy = (img.height - sh) / 2;
+      }
+      const outW = Math.min(1600, Math.max(1, Math.round(sw)));
+      const outH = Math.max(1, Math.round(outW / ratio));
+      const canvas = document.createElement("canvas");
+      canvas.width = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+      resolve(canvas.toDataURL("image/jpeg", 0.86));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("too-large"));
+    };
+    img.src = url;
+  });
+}
+
 export function dashPath(user) {
   if (!user) return "/login";
   if (user.role === "admin") return "/admin/dashboard";

@@ -36,8 +36,8 @@ router.post("/", authRequired, requireRole("admin"), async (req, res) => {
   try {
     const data = coursePayload(req.body);
     if (!data.title) return res.status(400).json({ error: "Course name is required." });
-    if (data.image_url && data.image_url.length > 1400000) {
-      return res.status(413).json({ error: "Image is too large. Please use a file under 1 MB." });
+    if (data.image_url && data.image_url.length > 2800000) {
+      return res.status(413).json({ error: "Image is too large. Please use a file under 2 MB." });
     }
     const exists = await queryOne("SELECT id FROM courses WHERE id=$1 OR slug=$1", [data.slug]);
     if (exists) return res.status(409).json({ error: "A course with this name already exists." });
@@ -113,8 +113,8 @@ async function updateCourseRecord(req, res) {
   if (!course) return res.status(404).json({ error: "Course not found." });
   const data = coursePayload({ ...course, ...req.body, slug: req.body.slug || course.slug });
   if (!data.title) return res.status(400).json({ error: "Course name is required." });
-  if (data.image_url && data.image_url.length > 1400000) {
-    return res.status(413).json({ error: "Image is too large. Please use a file under 1 MB." });
+  if (data.image_url && data.image_url.length > 2800000) {
+    return res.status(413).json({ error: "Image is too large. Please use a file under 2 MB." });
   }
   const clash = await queryOne("SELECT id FROM courses WHERE slug=$1 AND id<>$2", [data.slug, course.id]);
   if (clash) return res.status(409).json({ error: "Another course already uses this name." });
