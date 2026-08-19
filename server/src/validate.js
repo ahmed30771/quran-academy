@@ -19,11 +19,32 @@ export function validatePersonName(name) {
   return "";
 }
 
+export function normalizePhone(phone) {
+  let digits = String(phone || "").replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = "92" + digits.slice(1);
+  return digits;
+}
+
+export function validatePhone(phone) {
+  const raw = String(phone || "").trim();
+  if (!raw) return "Please enter your phone number.";
+  const digits = normalizePhone(raw);
+  if (digits.length < 10 || digits.length > 15) return "Enter a valid phone number, such as 03XX XXXXXXX.";
+  return "";
+}
+
 export function validateEmail(email) {
   const value = String(email || "").trim().toLowerCase();
   if (!value) return "Please enter your email.";
   if (!value.includes("@") || !EMAIL_RE.test(value)) return "Enter a valid email with @ and a domain, such as name@email.com.";
   return "";
+}
+
+export function validateEmailOptional(email) {
+  const value = String(email || "").trim();
+  if (!value) return "";
+  return validateEmail(value);
 }
 
 export function validatePassword(password) {

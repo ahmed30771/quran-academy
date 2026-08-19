@@ -28,6 +28,15 @@ export async function ensureCourseSchema() {
   await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS teaching_languages VARCHAR(32)");
   await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS teach_kids BOOLEAN NOT NULL DEFAULT FALSE");
   await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS teach_adults BOOLEAN NOT NULL DEFAULT FALSE");
+  await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS rating NUMERIC(2,1) DEFAULT 5.0");
+  await query("ALTER TABLE users ALTER COLUMN avatar TYPE TEXT");
+  await query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS users_phone_number_uq
+    ON users (phone_number)
+    WHERE phone_number IS NOT NULL AND phone_number <> ''
+  `);
+  await query("ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS phone VARCHAR(32)");
+  await query("ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS subject VARCHAR(160)");
   await query("ALTER TABLE courses ADD COLUMN IF NOT EXISTS slug VARCHAR(80)");
   await query("ALTER TABLE courses ADD COLUMN IF NOT EXISTS category VARCHAR(64)");
   await query("ALTER TABLE courses ADD COLUMN IF NOT EXISTS audiences TEXT[] NOT NULL DEFAULT '{}'");
@@ -46,6 +55,17 @@ export async function ensureCourseSchema() {
   await query("ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS locale_ur JSONB");
   await query("UPDATE courses SET slug = id WHERE slug IS NULL OR slug = ''");
   await query("CREATE UNIQUE INDEX IF NOT EXISTS courses_slug_idx ON courses (slug)");
+  await query(`
+    CREATE TABLE IF NOT EXISTS course_trials (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      course_id VARCHAR(64) NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+      starts_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ends_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '1 day')
+    )
+  `);
+  await query("ALTER TABLE course_trials DROP CONSTRAINT IF EXISTS course_trials_user_id_key");
+  await query("CREATE UNIQUE INDEX IF NOT EXISTS course_trials_user_course_uq ON course_trials (user_id, course_id)");
   await query(`
     CREATE TABLE IF NOT EXISTS teacher_courses (
       id SERIAL PRIMARY KEY,

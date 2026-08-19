@@ -2,9 +2,9 @@ CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   role VARCHAR(16) NOT NULL DEFAULT 'student' CHECK (role IN ('student','teacher','admin')),
   name VARCHAR(120) NOT NULL,
-  email VARCHAR(160) NOT NULL UNIQUE,
+  email VARCHAR(160) UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  avatar VARCHAR(255),
+  avatar TEXT,
   bio TEXT,
   privacy VARCHAR(32) NOT NULL DEFAULT 'staff',
   show_email BOOLEAN NOT NULL DEFAULT TRUE,
@@ -15,6 +15,11 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(32);
+ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+ALTER TABLE users ALTER COLUMN avatar TYPE TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS users_phone_number_uq
+  ON users (phone_number)
+  WHERE phone_number IS NOT NULL AND phone_number <> '';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth DATE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(16) DEFAULT 'en';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(64) DEFAULT 'UTC';
@@ -69,6 +74,9 @@ CREATE TABLE IF NOT EXISTS blog_posts (
 );
 
 ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS phone VARCHAR(32);
+ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS subject VARCHAR(160);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS rating NUMERIC(2,1) DEFAULT 5.0;
 
 CREATE TABLE IF NOT EXISTS reviews (
   id SERIAL PRIMARY KEY,
@@ -236,6 +244,16 @@ ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS locale_ur JSONB;
 
 UPDATE courses SET slug = id WHERE slug IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS courses_slug_idx ON courses (slug);
+
+CREATE TABLE IF NOT EXISTS course_trials (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  course_id VARCHAR(64) NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  starts_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ends_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '1 day')
+);
+ALTER TABLE course_trials DROP CONSTRAINT IF EXISTS course_trials_user_id_key;
+CREATE UNIQUE INDEX IF NOT EXISTS course_trials_user_course_uq ON course_trials (user_id, course_id);
 
 CREATE TABLE IF NOT EXISTS teacher_courses (
   id SERIAL PRIMARY KEY,

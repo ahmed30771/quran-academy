@@ -35,6 +35,24 @@ router.get("/", optionalAuth, async (req, res) => {
   }
 });
 
+router.get("/trial/me", authRequired, requireRole("student"), async (req, res) => {
+  try {
+    const rows = await query(
+      `SELECT ct.course_id, ct.starts_at, ct.ends_at, co.title
+       FROM course_trials ct JOIN courses co ON co.id=ct.course_id
+       WHERE ct.user_id=$1
+       ORDER BY ct.starts_at DESC`,
+      [req.user.id]
+    );
+    res.json({
+      courseIds: rows.map((r) => r.course_id),
+      trials: rows,
+    });
+  } catch (err) {
+    fail(res, err, "Could not load trial status.");
+  }
+});
+
 router.post("/", authRequired, requireRole("admin"), async (req, res) => {
   try {
     const data = coursePayload(req.body);
@@ -108,6 +126,47 @@ router.post("/:id/enroll", authRequired, requireRole("student"), async (req, res
     res.json({ ok: true, course });
   } catch (err) {
     fail(res, err, "Could not enroll in this course.");
+  }
+});
+
+router.post("/:id/trial", authRequired, requireRole("student"), async (req, res) => {
+  try {
+    const course = await findCourse(req.params.id);
+    if (!course || course.status !== "active") return res.status(404).json({ error: "Course not found." });
+    const used = await queryOne("SELECT course_id FROM course_trials WHERE user_id=$1 AND course_id=$2", [req.user.id, course.id]);
+    if (used) {
+      return res.status(409).json({ error: "You have already used the free trial for this course." });
+    }
+    const trial = await queryOne(
+      `INSERT INTO course_trials (user_id, course_id, starts_at, ends_at)
+       VALUES ($1,$2,NOW(), NOW() + INTERVAL '1 day') RETURNING course_id, starts_at, ends_at`,
+      [req.user.id, course.id]
+    );
+    const existing = await queryOne(
+      "SELECT id FROM enrollments WHERE user_id=$1 AND course_id=$2",
+      [req.user.id, course.id]
+    );
+    if (!existing) {
+      await query(
+        `INSERT INTO enrollments (user_id, course_id, plan, status)
+         VALUES ($1,$2,'trial','active')`,
+        [req.user.id, course.id]
+      );
+    }
+    const admin = await queryOne("SELECT id FROM users WHERE role='admin' LIMIT 1");
+    if (admin) {
+      const student = await queryOne("SELECT name FROM users WHERE id=$1", [req.user.id]);
+      await query(
+        "INSERT INTO notifications (user_id, text) VALUES ($1,$2)",
+        [admin.id, `One-day free trial: ${student?.name || "Student"} on ${course.title}.`]
+      );
+    }
+    res.json({ ok: true, trial, course });
+  } catch (err) {
+    if (err?.code === "23505") {
+      return res.status(409).json({ error: "You have already used the free trial for this course." });
+    }
+    fail(res, err, "Could not start the free trial.");
   }
 });
 

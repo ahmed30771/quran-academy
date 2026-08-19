@@ -29,7 +29,9 @@ router.put("/", authRequired, async (req, res) => {
     teachingLanguages,
     teachKids,
     teachAdults,
+    avatar,
   } = req.body || {};
+  const emailNorm = String(email || "").trim().toLowerCase() || null;
   const user = await queryOne(
     `UPDATE users
      SET name=$1, email=$2, bio=$3, phone_number=$4, date_of_birth=$5, preferred_language=$6, timezone=$7,
@@ -37,12 +39,13 @@ router.put("/", authRequired, async (req, res) => {
          gender=COALESCE($13, gender),
          teaching_languages=CASE WHEN role='teacher' THEN COALESCE($14, teaching_languages) ELSE teaching_languages END,
          teach_kids=CASE WHEN role='teacher' THEN COALESCE($15, teach_kids) ELSE teach_kids END,
-         teach_adults=CASE WHEN role='teacher' THEN COALESCE($16, teach_adults) ELSE teach_adults END, updated_at=NOW()
-     WHERE id=$17
+         teach_adults=CASE WHEN role='teacher' THEN COALESCE($16, teach_adults) ELSE teach_adults END,
+         avatar=COALESCE($17, avatar), updated_at=NOW()
+     WHERE id=$18
      RETURNING *`,
     [
       name,
-      email,
+      emailNorm,
       bio || "",
       phoneNumber || "",
       dateOfBirth || null,
@@ -57,6 +60,7 @@ router.put("/", authRequired, async (req, res) => {
       ["urdu", "english", "both"].includes(teachingLanguages) ? teachingLanguages : null,
       typeof teachKids === "boolean" ? teachKids : null,
       typeof teachAdults === "boolean" ? teachAdults : null,
+      avatar === undefined ? null : String(avatar || ""),
       req.user.id,
     ]
   );

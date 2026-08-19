@@ -95,7 +95,7 @@ api.get("/health", async (_req, res) => {
 
 api.get("/reviews", async (_req, res) => {
   try {
-    res.json(await query("SELECT * FROM reviews"));
+    res.json(await query("SELECT * FROM reviews ORDER BY stars DESC, id DESC"));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not load reviews." });
@@ -106,7 +106,7 @@ api.get("/teachers", async (_req, res) => {
   try {
     res.json(
       await query(
-        `SELECT id, name, bio, avatar, gender, teaching_languages, teach_kids, teach_adults, experience
+        `SELECT id, name, bio, avatar, gender, teaching_languages, teach_kids, teach_adults, experience, introduction, COALESCE(rating, 5) AS rating
          FROM users WHERE role='teacher' AND status='active' ORDER BY name`
       )
     );
@@ -132,6 +132,15 @@ api.use((req, res) => {
   res.status(404).json({ error: `API route not found: ${req.method} ${req.originalUrl}` });
 });
 
+app.get("/", (_req, res) => {
+  const site = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+  res.json({
+    ok: true,
+    message: "This is the API. Open the website instead.",
+    website: site,
+    health: "/api/health",
+  });
+});
 app.use("/api", api);
 app.use("/", api);
 

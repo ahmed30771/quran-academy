@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { query, queryOne } from "../db.js";
 import { signToken, publicUser, cookieOpts, readToken } from "../middleware/auth.js";
 import { recordAudit } from "../middleware/ownership.js";
-import { normalizeName, validatePersonName, validateEmail, validatePassword } from "../validate.js";
+import { normalizeName, normalizePhone, validatePersonName, validateEmail, validateEmailOptional, validatePassword, validatePhone } from "../validate.js";
 import { sendMail } from "../mail.js";
 import { isAdminEmail } from "../admins.js";
 
@@ -26,38 +26,46 @@ async function ensureResetTable() {
 }
 
 router.post("/register", async (req, res) => {
-  const { name, email, password, role, gender, phone, teachingLanguages, teachKids, teachAdults, courseIds } = req.body || {};
+  const { name, email, password, role, gender, phone, teachingLanguages, teachKids, teachAdults, courseIds, qualifications } = req.body || {};
   const nameErr = validatePersonName(name);
-  const emailErr = validateEmail(email);
+  const emailErr = validateEmailOptional(email);
+  const phoneErr = validatePhone(phone);
   const passErr = validatePassword(password);
-  if (nameErr || emailErr || passErr) {
-    return res.status(400).json({ error: nameErr || emailErr || passErr });
+  if (nameErr || emailErr || phoneErr || passErr) {
+    return res.status(400).json({ error: nameErr || emailErr || phoneErr || passErr });
   }
   if (gender !== "male" && gender !== "female") {
     return res.status(400).json({ error: "Please select gender." });
   }
-  if (isAdminEmail(email)) {
+  const emailNorm = String(email || "").trim().toLowerCase() || null;
+  if (emailNorm && isAdminEmail(emailNorm)) {
     return res.status(409).json({ error: "That email is already registered." });
   }
   const chosen = role === "teacher" ? "teacher" : "student";
+  const quals = String(qualifications || "").trim();
+  if (chosen === "teacher" && !quals) {
+    return res.status(400).json({ error: "Please enter your qualifications." });
+  }
   const langs = chosen === "teacher" && ["urdu", "english", "both"].includes(teachingLanguages) ? teachingLanguages : null;
+  const phoneNorm = normalizePhone(phone);
   try {
     const password_hash = await bcrypt.hash(password, ROUNDS);
     const user = await queryOne(
-      `INSERT INTO users (role, name, email, password_hash, status, gender, phone_number, teaching_languages, teach_kids, teach_adults)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      `INSERT INTO users (role, name, email, password_hash, status, gender, phone_number, teaching_languages, teach_kids, teach_adults, qualifications)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        RETURNING *`,
       [
         chosen,
         normalizeName(name),
-        String(email).trim().toLowerCase(),
+        emailNorm,
         password_hash,
         chosen === "teacher" ? "pending" : "active",
         gender,
-        String(phone || "").trim(),
+        phoneNorm,
         langs,
         chosen === "teacher" && !!teachKids,
         chosen === "teacher" && !!teachAdults,
+        chosen === "teacher" ? quals : "",
       ]
     );
     if (chosen === "teacher" && Array.isArray(courseIds)) {
@@ -76,23 +84,36 @@ router.post("/register", async (req, res) => {
     res.cookie("token", token, cookieOpts);
     res.json({ user: publicUser(user) });
   } catch (err) {
-    if (err.code === "23505") return res.status(409).json({ error: "That email is already registered." });
+    if (err.code === "23505") {
+      const detail = `${err.constraint || ""} ${err.detail || ""}`.toLowerCase();
+      if (detail.includes("phone")) return res.status(409).json({ error: "That phone number is already registered." });
+      return res.status(409).json({ error: "That email is already registered." });
+    }
     console.error(err);
     res.status(500).json({ error: "Could not create account." });
   }
 });
 
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body || {};
-  const emailErr = validateEmail(email);
-  if (emailErr || !password) return res.status(400).json({ error: emailErr || "Email and password are required." });
+  const { email, password, login } = req.body || {};
+  const ident = String(login || email || "").trim();
+  if (!ident || !password) return res.status(400).json({ error: "Phone or email, and password, are required." });
   try {
-    const emailNorm = String(email).trim().toLowerCase();
-    let user = await queryOne("SELECT * FROM users WHERE email=$1", [emailNorm]);
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-      return res.status(401).json({ error: "Email or password is incorrect." });
+    let user;
+    if (ident.includes("@")) {
+      const emailNorm = ident.toLowerCase();
+      const emailErr = validateEmail(emailNorm);
+      if (emailErr) return res.status(400).json({ error: emailErr });
+      user = await queryOne("SELECT * FROM users WHERE email=$1", [emailNorm]);
+    } else {
+      const phoneErr = validatePhone(ident);
+      if (phoneErr) return res.status(400).json({ error: phoneErr });
+      user = await queryOne("SELECT * FROM users WHERE phone_number=$1", [normalizePhone(ident)]);
     }
-    if (isAdminEmail(emailNorm) && user.role !== "admin") {
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: "Phone, email, or password is incorrect." });
+    }
+    if (user.email && isAdminEmail(user.email) && user.role !== "admin") {
       user = await queryOne("UPDATE users SET role='admin', status='active', updated_at=NOW() WHERE id=$1 RETURNING *", [user.id]);
     }
     await query("UPDATE users SET last_login=NOW(), updated_at=NOW() WHERE id=$1", [user.id]);

@@ -20,6 +20,7 @@ function publicTeacher(row) {
     qualifications: row.qualifications || "",
     experience: row.experience || "",
     introduction: row.introduction || "",
+    rating: Number(row.rating) || 5,
     status: row.status,
   };
 }
@@ -107,7 +108,7 @@ router.get("/:id/courses", async (req, res) => {
 
 router.get("/:id/public", async (req, res) => {
   const teacher = await queryOne(
-    `SELECT id, name, avatar, bio, gender, teaching_languages, teach_kids, teach_adults, qualifications, experience, introduction, status
+    `SELECT id, name, avatar, bio, gender, teaching_languages, teach_kids, teach_adults, qualifications, experience, introduction, status, COALESCE(rating, 5) AS rating
      FROM users WHERE id=$1 AND role='teacher' AND status='active'`,
     [req.params.id]
   );

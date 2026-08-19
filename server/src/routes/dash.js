@@ -38,6 +38,13 @@ router.get("/student", authRequired, requireRole("student"), async (req, res) =>
     `SELECT e.*, co.title FROM enrollments e JOIN courses co ON co.id=e.course_id WHERE e.user_id=$1`,
     [req.user.id]
   );
+  const trials = await query(
+    `SELECT ct.course_id, ct.starts_at, ct.ends_at, co.title
+     FROM course_trials ct JOIN courses co ON co.id=ct.course_id
+     WHERE ct.user_id=$1
+     ORDER BY ct.starts_at DESC`,
+    [req.user.id]
+  );
   const completedHomework = homework.filter((item) => item.status === "done").length;
   const totalLessons = Math.max(20, classes.length * 6 + homework.length * 2);
   const lessonsDone = Math.max(1, classes.length * 4 + completedHomework + 4);
@@ -52,6 +59,8 @@ router.get("/student", authRequired, requireRole("student"), async (req, res) =>
     classes,
     homework,
     enrollments,
+    trials,
+    trial: trials[0] || null,
     stats: {
       activeCourse,
       nextClassText: nextClass
