@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { i18n } from "../i18n";
-import { api } from "../api";
+import { api, onApiBusy } from "../api";
 
 const AppCtx = createContext(null);
 
@@ -10,6 +10,7 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState("");
+  const [working, setWorking] = useState(false);
 
   const t = i18n[lang] || i18n.en;
 
@@ -29,6 +30,8 @@ export function AppProvider({ children }) {
       .catch(() => setUser(null))
       .finally(() => setReady(true));
   }, []);
+
+  useEffect(() => onApiBusy(setWorking), []);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -53,6 +56,14 @@ export function AppProvider({ children }) {
   return (
     <AppCtx.Provider value={value}>
       {children}
+      {working ? (
+        <div className="work-overlay" role="status" aria-live="polite">
+          <div className="work-card">
+            <span className="work-spin" aria-hidden="true" />
+            <p>{t.pleaseWait}</p>
+          </div>
+        </div>
+      ) : null}
       {toast ? <div className="toast show">{toast}</div> : null}
     </AppCtx.Provider>
   );

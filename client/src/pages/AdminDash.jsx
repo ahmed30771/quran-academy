@@ -428,7 +428,7 @@ export default function AdminDash() {
           <ul style={{ display: "grid", gap: "0.7rem", marginTop: "0.8rem" }}>
             {data.inbox.length ? data.inbox.map((m) => (
               <li className="mini-row" key={m.id}>
-                <span>{m.name} — {m.message.slice(0, 72)}{m.message.length > 72 ? "…" : ""}</span>
+                <span>{m.subject ? `${m.name} — ${m.subject}` : m.name} — {m.message.slice(0, 72)}{m.message.length > 72 ? "…" : ""}</span>
                 <b>{new Date(m.created_at).toLocaleDateString()}</b>
               </li>
             )) : <li className="mini-row"><span>No inbox messages.</span><b>Clear</b></li>}

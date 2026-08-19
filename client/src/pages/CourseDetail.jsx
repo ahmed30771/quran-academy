@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
-import { audienceLabel, categoryLabel, initials, langLabel, levelLabel, localized } from "../helpers";
+import { audienceLabel, categoryLabel, initials, langLabel, levelLabel, localized, startCourseTrial } from "../helpers";
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -11,11 +11,30 @@ export default function CourseDetail() {
   const [course, setCourse] = useState(null);
   const [teachers, setTeachers] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [trialBusy, setTrialBusy] = useState(false);
+  const [trialUsed, setTrialUsed] = useState(false);
 
   useEffect(() => {
     api(`/api/courses/${id}`).then(setCourse).catch(() => setCourse(null));
     api(`/api/courses/${id}/teachers`).then(setTeachers).catch(() => setTeachers([]));
   }, [id]);
+
+  useEffect(() => {
+    if (!user || user.role !== "student" || !id) {
+      setTrialUsed(false);
+      return;
+    }
+    api("/api/courses/trial/me")
+      .then((d) => setTrialUsed((d.courseIds || []).includes(course?.id || id)))
+      .catch(() => setTrialUsed(false));
+  }, [user, id, course?.id]);
+
+  async function bookTrial() {
+    setTrialBusy(true);
+    const res = await startCourseTrial({ nav, user, showToast, t, courseId: course.id });
+    if (res?.ok) setTrialUsed(true);
+    setTrialBusy(false);
+  }
 
   async function enroll() {
     if (!user) return nav("/login");
@@ -92,8 +111,12 @@ export default function CourseDetail() {
             <h3>{t.courseReqs}</h3>
             <p>{view.requirements || "—"}</p>
           </article>
+          <p className="trial-note">{t.firstDayTrial}</p>
           <div className="btn-row">
-            <button className="btn btn-gold" type="button" disabled={busy} onClick={enroll}>{busy ? "..." : t.enroll}</button>
+            <button className="btn btn-gold" type="button" disabled={trialUsed || trialBusy} onClick={bookTrial}>
+              {trialUsed ? t.trialUsed : trialBusy ? "..." : t.bookTrial}
+            </button>
+            <button className="btn btn-primary" type="button" disabled={busy} onClick={enroll}>{busy ? "..." : t.enroll}</button>
             <Link className="btn btn-ghost" to="/courses">{t.courses}</Link>
           </div>
           <div className="section-head" style={{ marginTop: "2.4rem" }}>

@@ -26,6 +26,7 @@ export default function Footer({ onChat }) {
                 <li><Link to="/about">{t.about}</Link></li>
                 <li><Link to="/#mission">{t.mission}</Link></li>
                 <li><Link to="/#how">{t.howKicker}</Link></li>
+                <li><Link to="/teachers">{t.teachersPage}</Link></li>
                 <li><Link to="/#teachers">{t.teachKicker}</Link></li>
                 <li><Link to="/#events">{t.eventsKicker}</Link></li>
               </ul>
@@ -44,7 +45,7 @@ export default function Footer({ onChat }) {
             <div>
               <h4>{t.footLearn}</h4>
               <ul>
-                <li><Link to="/contact">{t.trial}</Link></li>
+                <li><Link to="/contact">{t.contact}</Link></li>
                 <li><Link to="/#programs">{t.progFeatKicker}</Link></li>
                 <li><Link to="/blog">{t.blog}</Link></li>
                 <li><Link to="/#faq">{t.faqKicker}</Link></li>

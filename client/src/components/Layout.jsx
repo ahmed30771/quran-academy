@@ -7,7 +7,12 @@ import Chatbot from "./Chatbot";
 export default function Layout() {
   const [chat, setChat] = useState(false);
   const loc = useLocation();
-  const dash = ["/student", "/teacher", "/admin"].some((p) => loc.pathname.startsWith(p));
+  const path = loc.pathname;
+  const dash =
+    path.startsWith("/student") ||
+    path.startsWith("/admin") ||
+    path === "/teacher" ||
+    path.startsWith("/teacher/");
 
   if (dash) return <Outlet />;
 

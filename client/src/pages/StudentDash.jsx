@@ -26,6 +26,9 @@ export default function StudentDash() {
             <p className="kicker">{t.salaam}</p>
             <h2>{`${firstName}, your next class is ${next ? "scheduled" : "waiting"}`}</h2>
             <p>{stats.nextClassText || t.nextClassP}</p>
+            {(data.trials || (data.trial ? [data.trial] : [])).length
+              ? <p className="trial-note">{t.trialActive}: {(data.trials || [data.trial]).map((row) => row.title).join(" · ")}</p>
+              : null}
             <div className="btn-row">
               <button className="btn btn-primary" type="button" onClick={() => showToast(t.toastJoin)}>{t.joinClass}</button>
               <a className="btn btn-ghost" href={SITE.WHATSAPP} target="_blank" rel="noopener">{t.waTeacher}</a>

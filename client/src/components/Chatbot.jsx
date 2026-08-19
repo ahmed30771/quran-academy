@@ -26,7 +26,9 @@ export default function Chatbot({ open, onClose, onOpen }) {
     } else if (/course|tajweed|hifz|learn|کورس/.test(s)) {
       text = lang === "ur" ? "ہم تجوید، ناظرہ، حفظ اور قرآنی عربی پیش کرتے ہیں۔" : "We offer Tajweed, Nazra, Hifz, and Quranic Arabic.";
     } else if (/trial|free|ٹرائل/.test(s)) {
-      text = lang === "ur" ? "جی ہاں — رابطہ یا واٹس ایپ سے مفت ٹرائل بک کریں۔" : "Yes — book a free trial from Contact or WhatsApp.";
+      text = lang === "ur"
+        ? "ہر کورس کے پہلے دن کا مفت ٹرائل کورسز کے صفحے پر ہے۔ پہلے لاگ اِن یا رجسٹر کریں۔ ایک کورس کا ٹرائل دوسرے کورسز کے لیے باقی رہتا ہے۔"
+        : "Each course has its own first-day free trial on the Courses page. Log in or register first. A trial on one course does not use the trial on others.";
     }
     setMsgs((m) => [...m, { who: "user", text: raw }, { who: "bot", text }]);
   }

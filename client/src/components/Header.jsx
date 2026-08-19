@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { dashPath, firstLastName, initials } from "../helpers";
 
 export default function Header() {
   const { t, lang, setLang, currency, setCurrency, user } = useApp();
@@ -26,13 +27,7 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const dash = user
-    ? user.role === "admin"
-      ? "/admin/dashboard"
-      : user.role === "teacher"
-        ? "/teacher/dashboard"
-        : "/student/dashboard"
-    : "/login";
+  const dash = dashPath(user);
 
   const cls = ["site-header", scrolled && "is-scrolled", hot && "is-hot"].filter(Boolean).join(" ");
 
@@ -61,9 +56,9 @@ export default function Header() {
           <NavLink to="/" end className={({ isActive }) => (isActive ? "is-active" : "")}>{t.home}</NavLink>
           <NavLink to="/about" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.about}</NavLink>
           <NavLink to="/courses" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.courses}</NavLink>
+          <NavLink to="/teachers" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.teachersPage}</NavLink>
           <NavLink to="/blog" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.blog}</NavLink>
           <NavLink to="/contact" className={({ isActive }) => (isActive ? "is-active" : "")}>{t.contact}</NavLink>
-          <NavLink to={dash} className={({ isActive }) => (isActive ? "is-active" : "")}>{user ? t.overview : t.login}</NavLink>
           <div className="nav-tools">
             <div className="lang-toggle">
               <button type="button" className={lang === "en" ? "is-on" : ""} onClick={() => setLang("en")}>EN</button>
@@ -73,7 +68,16 @@ export default function Header() {
               <button type="button" className={currency === "pkr" ? "is-on" : ""} onClick={() => setCurrency("pkr")}>PKR</button>
               <button type="button" className={currency === "usd" ? "is-on" : ""} onClick={() => setCurrency("usd")}>USD</button>
             </div>
-            <Link className="btn btn-gold btn-sm" to="/contact">{t.trial}</Link>
+            {user ? (
+              <Link className="btn btn-gold btn-sm header-who" to={dash}>
+                <span className="avatar dash-avatar">
+                  {user.avatar ? <img src={user.avatar} alt="" /> : initials(user.name)}
+                </span>
+                <span className="header-who-name">{firstLastName(user.name)}</span>
+              </Link>
+            ) : (
+              <Link className="btn btn-gold btn-sm" to="/login">{t.login}</Link>
+            )}
           </div>
         </nav>
         <button className="menu-btn" type="button" aria-label="Menu" onClick={() => setOpen((v) => !v)}>

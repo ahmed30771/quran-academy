@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
-import { ago, dashPath, initials, validatePassword } from "../helpers";
+import { ago, dashPath, firstLastName, initials, validatePassword } from "../helpers";
+import AvatarCrop from "./AvatarCrop";
 
 export default function DashShell({ role, searchPlaceholder, navLinks, activeKey, onNavChange, children }) {
   const { t, lang, setLang, currency, setCurrency, user, setUser, ready, showToast } = useApp();
@@ -12,6 +13,7 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
   const [acctOpen, setAcctOpen] = useState(false);
   const [notes, setNotes] = useState([]);
   const [modal, setModal] = useState(null);
+  const [cropSrc, setCropSrc] = useState("");
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -29,6 +31,7 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
     teachingLanguages: "",
     teachKids: false,
     teachAdults: false,
+    avatar: "",
   });
   const [settings, setSettings] = useState({
     privacy: "staff",
@@ -62,6 +65,7 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
       teachingLanguages: user.teachingLanguages || "",
       teachKids: !!user.teachKids,
       teachAdults: !!user.teachAdults,
+      avatar: user.avatar || "",
     });
     setSettings((s) => ({
       ...s,
@@ -79,12 +83,13 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
         setSide(false);
         setNotesOpen(false);
         setAcctOpen(false);
-        setModal(null);
+        if (cropSrc) setCropSrc("");
+        else setModal(null);
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  }, [cropSrc]);
 
   if (!ready) return null;
   if (!user) return <Navigate to="/login" replace />;
@@ -118,6 +123,19 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
   async function markRead() {
     await api("/api/dash/read", { method: "POST" }).catch(() => {});
     setNotes((rows) => rows.map((n) => ({ ...n, is_read: 1 })));
+  }
+
+  async function onAvatar(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!String(file.type || "").startsWith("image/")) {
+      showToast(t.errCourseImage);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    if (cropSrc.startsWith("blob:")) URL.revokeObjectURL(cropSrc);
+    setCropSrc(url);
   }
 
   async function saveProfile(e) {
@@ -253,8 +271,10 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
                   setAcctOpen((v) => !v);
                 }}
               >
-                <span className="avatar dash-avatar">{initials(user.name)}</span>
-                <span>{user.name}</span>
+                <span className="avatar dash-avatar">
+                  {user.avatar ? <img src={user.avatar} alt="" /> : initials(user.name)}
+                </span>
+                <span className="who-name">{firstLastName(user.name)}</span>
               </button>
               <div className="drop-panel drop-menu">
                 <button type="button" onClick={() => { closeDrops(); setModal("profile"); }}>{t.profile}</button>
@@ -278,17 +298,52 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
       </div>
 
       {modal === "profile" ? (
-        <div className="modal-bg open" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
-          <div className="modal">
-            <button className="menu-close modal-x" type="button" onClick={() => setModal(null)}>×</button>
-            <h3>{t.profileTitle}</h3>
-            <form className="form" onSubmit={saveProfile}>
-              <div className="photo-field">
-                <span className="avatar" id="profilePreview">{initials(profile.name)}</span>
-                <label><span>{t.profilePhoto}</span><input type="file" accept="image/*" disabled /></label>
-              </div>
+        <div className="modal-bg open" onClick={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (cropSrc) {
+            if (cropSrc.startsWith("blob:")) URL.revokeObjectURL(cropSrc);
+            setCropSrc("");
+            return;
+          }
+          setModal(null);
+        }}>
+          <div className="modal modal-scroll">
+            <button className="menu-close modal-x" type="button" onClick={() => {
+              if (cropSrc) {
+                if (cropSrc.startsWith("blob:")) URL.revokeObjectURL(cropSrc);
+                setCropSrc("");
+                return;
+              }
+              setModal(null);
+            }}>×</button>
+            <h3>{cropSrc ? t.cropPhoto : t.profileTitle}</h3>
+            {cropSrc ? (
+              <AvatarCrop
+                src={cropSrc}
+                t={t}
+                onCancel={() => {
+                  if (cropSrc.startsWith("blob:")) URL.revokeObjectURL(cropSrc);
+                  setCropSrc("");
+                }}
+                onApply={(avatar) => {
+                  if (cropSrc.startsWith("blob:")) URL.revokeObjectURL(cropSrc);
+                  setCropSrc("");
+                  if (avatar) setProfile((p) => ({ ...p, avatar }));
+                  else showToast(t.errCourseImage);
+                }}
+              />
+            ) : (
+            <form className="form modal-form" onSubmit={saveProfile}>
+              <div className="modal-form-body">
+              <label className="photo-pick" aria-label={t.profilePhoto}>
+                <span className="avatar">
+                  {profile.avatar ? <img src={profile.avatar} alt="" /> : initials(profile.name)}
+                </span>
+                <span className="photo-plus" aria-hidden="true">+</span>
+                <input type="file" accept="image/*" onChange={onAvatar} />
+              </label>
               <label><span>{t.fullName}</span><input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required /></label>
-              <label><span>{t.fldEmail}</span><input type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} required /></label>
+              <label><span>{t.fldEmail}</span><input type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} /></label>
               <label><span>Phone number</span><input value={profile.phoneNumber} onChange={(e) => setProfile({ ...profile, phoneNumber: e.target.value })} /></label>
               <label><span>Date of birth</span><input type="date" value={profile.dateOfBirth} onChange={(e) => setProfile({ ...profile, dateOfBirth: e.target.value })} /></label>
               <label><span>Preferred language</span><input value={profile.preferredLanguage} onChange={(e) => setProfile({ ...profile, preferredLanguage: e.target.value })} /></label>
@@ -324,8 +379,12 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
                   </fieldset>
                 </>
               ) : null}
-              <button className="btn btn-primary" type="submit">{t.saveProfile}</button>
+              </div>
+              <div className="modal-form-foot">
+                <button className="btn btn-primary" type="submit">{t.saveProfile}</button>
+              </div>
             </form>
+            )}
           </div>
         </div>
       ) : null}

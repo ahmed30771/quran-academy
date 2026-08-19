@@ -16,7 +16,8 @@ export default function Contact() {
         body: {
           name: form.get("name"),
           email: form.get("email"),
-          role: form.get("role"),
+          phone: form.get("phone"),
+          subject: form.get("subject"),
           message: form.get("message"),
         },
       });
@@ -52,11 +53,12 @@ export default function Contact() {
                 <input type="email" name="email" required placeholder={t.phEmail} />
               </label>
               <label>
-                <span>{t.fldRole}</span>
-                <select name="role">
-                  <option value="student">{t.optStudent}</option>
-                  <option value="teacher">{t.optTeacher}</option>
-                </select>
+                <span>{t.fldPhone}</span>
+                <input name="phone" required placeholder={t.phPhone} />
+              </label>
+              <label>
+                <span>{t.fldSubject}</span>
+                <input name="subject" required placeholder={t.phSubject} />
               </label>
               <label>
                 <span>{t.fldMsg}</span>

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
-import { dashPath, localized, validatePersonName, validateEmail, validatePassword } from "../helpers";
+import { dashPath, localized, validatePersonName, validateEmail, validateEmailOptional, validatePassword, validatePhone } from "../helpers";
 
 export default function Login() {
   const { t, lang, user, setUser, showToast, ready } = useApp();
+  const loc = useLocation();
   const nav = useNavigate();
+  const afterAuth = loc.state?.from || "";
   const [mode, setMode] = useState("login");
   const [role, setRole] = useState("student");
   const [busy, setBusy] = useState(false);
@@ -17,14 +19,16 @@ export default function Login() {
   const [teachingLanguages, setTeachingLanguages] = useState("");
   const [teachKids, setTeachKids] = useState(false);
   const [teachAdults, setTeachAdults] = useState(false);
+  const [qualifications, setQualifications] = useState("");
   const [courseIds, setCourseIds] = useState([]);
+  const [courseMenuOpen, setCourseMenuOpen] = useState(false);
   const [catalog, setCatalog] = useState([]);
 
   useEffect(() => {
     api("/api/courses").then(setCatalog).catch(() => setCatalog([]));
   }, []);
 
-  if (ready && user) return <Navigate to={dashPath(user)} replace />;
+  if (ready && user) return <Navigate to={afterAuth || dashPath(user)} replace />;
 
   function switchMode(next) {
     setMode(next);
@@ -34,19 +38,20 @@ export default function Login() {
   async function onLogin(e) {
     e.preventDefault();
     const form = new FormData(e.target);
-    const email = String(form.get("email") || "");
+    const login = String(form.get("login") || "");
     const password = String(form.get("password") || "");
-    const next = { email: validateEmail(email, t), password: password ? "" : t.errPassRequired };
+    const loginErr = login.includes("@") ? validateEmail(login, t) : validatePhone(login, t);
+    const next = { login: loginErr, password: password ? "" : t.errPassRequired };
     setErrors(next);
-    if (next.email || next.password) return;
+    if (next.login || next.password) return;
     setBusy(true);
     try {
       const data = await api("/api/auth/login", {
         method: "POST",
-        body: { email, password },
+        body: { login, password },
       });
       setUser(data.user);
-      nav(dashPath(data.user));
+      nav(afterAuth || dashPath(data.user));
     } catch (err) {
       showToast(err.message);
     } finally {
@@ -62,12 +67,14 @@ export default function Login() {
     const password = String(form.get("password") || "");
     const next = {
       name: validatePersonName(name, t),
-      email: validateEmail(email, t),
+      email: validateEmailOptional(email, t),
+      phone: validatePhone(phone, t),
       password: validatePassword(password, t),
       gender: gender === "male" || gender === "female" ? "" : t.errGender,
+      qualifications: role === "teacher" && !qualifications.trim() ? t.errQualRequired : "",
     };
     setErrors(next);
-    if (next.name || next.email || next.password || next.gender) return;
+    if (next.name || next.email || next.phone || next.password || next.gender || next.qualifications) return;
     setBusy(true);
     try {
       const data = await api("/api/auth/register", {
@@ -78,16 +85,17 @@ export default function Login() {
           password,
           role,
           gender,
-          phone: role === "teacher" ? phone : "",
+          phone,
           teachingLanguages: role === "teacher" ? teachingLanguages : "",
           teachKids: role === "teacher" && teachKids,
           teachAdults: role === "teacher" && teachAdults,
           courseIds: role === "teacher" ? courseIds : [],
+          qualifications: role === "teacher" ? qualifications : "",
         },
       });
       setUser(data.user);
       if (data.user.status === "pending") showToast(t.teacherPending);
-      nav(dashPath(data.user));
+      nav(afterAuth || dashPath(data.user));
     } catch (err) {
       showToast(err.message);
     } finally {
@@ -173,9 +181,9 @@ export default function Login() {
         {mode === "login" ? (
           <form className="form" onSubmit={onLogin} noValidate>
             <label>
-              <span>{t.fldEmail}</span>
-              <input type="email" name="email" autoComplete="email" placeholder={t.phEmail} className={errors.email ? "is-invalid" : ""} />
-              {errors.email ? <em className="field-error">{errors.email}</em> : null}
+              <span>{t.fldEmailOrPhone}</span>
+              <input name="login" autoComplete="username" placeholder={t.phEmailOrPhone} className={errors.login ? "is-invalid" : ""} />
+              {errors.login ? <em className="field-error">{errors.login}</em> : null}
             </label>
             <label>
               <span>{t.password}</span>
@@ -195,9 +203,14 @@ export default function Login() {
               {errors.name ? <em className="field-error">{errors.name}</em> : null}
             </label>
             <label>
-              <span>{t.fldEmail}</span>
+              <span>{t.fldEmailOptional}</span>
               <input type="email" name="email" autoComplete="email" placeholder={t.phEmail} className={errors.email ? "is-invalid" : ""} />
               {errors.email ? <em className="field-error">{errors.email}</em> : null}
+            </label>
+            <label>
+              <span>{t.fldPhone}</span>
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" placeholder={t.phPhone} className={errors.phone ? "is-invalid" : ""} />
+              {errors.phone ? <em className="field-error">{errors.phone}</em> : null}
             </label>
             <label>
               <span>{t.password}</span>
@@ -216,8 +229,9 @@ export default function Login() {
             {role === "teacher" ? (
               <>
                 <label>
-                  <span>{t.phPhone}</span>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.phPhone} />
+                  <span>{t.fldQualification}</span>
+                  <textarea value={qualifications} onChange={(e) => setQualifications(e.target.value)} placeholder={t.phQualification} className={errors.qualifications ? "is-invalid" : ""} />
+                  {errors.qualifications ? <em className="field-error">{errors.qualifications}</em> : null}
                 </label>
                 <label>
                   <span>{t.teachingLang}</span>
@@ -233,22 +247,30 @@ export default function Login() {
                   <label className="check-row"><input type="checkbox" checked={teachKids} onChange={(e) => setTeachKids(e.target.checked)} /> {t.filterKids}</label>
                   <label className="check-row"><input type="checkbox" checked={teachAdults} onChange={(e) => setTeachAdults(e.target.checked)} /> {t.filterAdults}</label>
                 </fieldset>
-                <fieldset className="check-set">
-                  <legend>{t.teachCourses}</legend>
-                  <p className="hint" style={{ margin: 0 }}>{t.teachCoursesHint}</p>
-                  <div className="check-grid">
-                    {catalog.map((c) => (
-                      <label className="check-row" key={c.id}>
-                        <input
-                          type="checkbox"
-                          checked={courseIds.includes(c.id)}
-                          onChange={(e) => setCourseIds((ids) => (e.target.checked ? [...ids, c.id] : ids.filter((id) => id !== c.id)))}
-                        />
-                        {localized(c, lang).title}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
+                <div className={`multi-select${errors.courses ? " is-invalid" : ""}`}>
+                  <span>{t.teachCourses}</span>
+                  <p className="hint" style={{ margin: "0.2rem 0 0.45rem", textAlign: "start" }}>{t.teachCoursesHint}</p>
+                  <button type="button" className="multi-select-toggle" onClick={() => setCourseMenuOpen((open) => !open)}>
+                    {courseIds.length ? t.teachCoursesPicked.replace("{n}", String(courseIds.length)) : t.teachCoursesPick}
+                  </button>
+                  {courseMenuOpen ? (
+                    <div className="multi-select-menu" role="listbox" aria-multiselectable="true">
+                      {catalog.map((c) => {
+                        const checked = courseIds.includes(c.id);
+                        return (
+                          <label className="check-row" key={c.id}>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => setCourseIds((ids) => (e.target.checked ? [...ids, c.id] : ids.filter((id) => id !== c.id)))}
+                            />
+                            {localized(c, lang).title}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
               </>
             ) : null}
             <button className="btn btn-gold" type="submit" disabled={busy}>{t.createAccount}</button>

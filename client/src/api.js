@@ -14,16 +14,44 @@ export function formatMoney(usd, currency) {
   return "Rs " + Math.round(n * SITE.USD_TO_PKR).toLocaleString("en-PK");
 }
 
+let busyCount = 0;
+const busyListeners = new Set();
+
+function emitBusy() {
+  const on = busyCount > 0;
+  busyListeners.forEach((fn) => fn(on));
+}
+
+export function onApiBusy(fn) {
+  busyListeners.add(fn);
+  fn(busyCount > 0);
+  return () => busyListeners.delete(fn);
+}
+
+function beginBusy() {
+  busyCount += 1;
+  emitBusy();
+}
+
+function endBusy() {
+  busyCount = Math.max(0, busyCount - 1);
+  emitBusy();
+}
+
 export async function api(path, opts = {}) {
+  const method = String(opts.method || "GET").toUpperCase();
+  const track = !opts.silent && method !== "GET" && method !== "HEAD";
+  if (track) beginBusy();
   try {
     const headers = { ...(opts.headers || {}) };
     const hasBody = opts.body !== undefined && opts.body !== null;
     if (hasBody && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
+    const { silent, ...fetchOpts } = opts;
     const res = await fetch(path, {
       credentials: "include",
-      ...opts,
+      ...fetchOpts,
       headers,
-      body: hasBody && typeof opts.body !== "string" ? JSON.stringify(opts.body) : opts.body,
+      body: hasBody && typeof fetchOpts.body !== "string" ? JSON.stringify(fetchOpts.body) : fetchOpts.body,
     });
     const text = await res.text();
     let data = {};
@@ -39,5 +67,7 @@ export async function api(path, opts = {}) {
   } catch (err) {
     if (err instanceof TypeError) throw new Error("Could not reach the server.");
     throw err;
+  } finally {
+    if (track) endBusy();
   }
 }

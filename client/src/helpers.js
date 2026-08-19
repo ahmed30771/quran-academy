@@ -1,3 +1,5 @@
+import { api } from "./api.js";
+
 const LATIN_NAME = /^[A-Za-z]+(?: [A-Za-z]+)+$/;
 const URDU_NAME = /^[\u0600-\u065F\u066E-\u06D3\u06D5\u06EE-\u06FF\u0750-\u077F]+(?:\s+[\u0600-\u065F\u066E-\u06D3\u06D5\u06EE-\u06FF\u0750-\u077F]+)+$/;
 const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
@@ -19,11 +21,32 @@ export function validatePersonName(name, t) {
   return "";
 }
 
+export function normalizePhone(phone) {
+  let digits = String(phone || "").replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = "92" + digits.slice(1);
+  return digits;
+}
+
+export function validatePhone(phone, t) {
+  const raw = String(phone || "").trim();
+  if (!raw) return t.errPhoneRequired;
+  const digits = normalizePhone(raw);
+  if (digits.length < 10 || digits.length > 15) return t.errPhoneInvalid;
+  return "";
+}
+
 export function validateEmail(email, t) {
   const value = String(email || "").trim().toLowerCase();
   if (!value) return t.errEmailRequired;
   if (!value.includes("@") || !EMAIL_RE.test(value)) return t.errEmailInvalid;
   return "";
+}
+
+export function validateEmailOptional(email, t) {
+  const value = String(email || "").trim();
+  if (!value) return "";
+  return validateEmail(value, t);
 }
 
 export function validatePassword(password, t) {
@@ -33,13 +56,22 @@ export function validatePassword(password, t) {
 }
 
 export function initials(name) {
-  return (name || "?")
+  const parts = String(name || "")
+    .trim()
     .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+    .filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export function firstLastName(name) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length <= 2) return parts.join(" ");
+  return `${parts[0]} ${parts[parts.length - 1]}`;
 }
 
 export function ago(iso) {
@@ -50,6 +82,11 @@ export function ago(iso) {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return hours + "h ago";
   return Math.floor(hours / 24) + "d ago";
+}
+
+export function starLine(value) {
+  const n = Math.max(0, Math.min(5, Math.round(Number(value) || 0)));
+  return "★".repeat(n) + "☆".repeat(5 - n);
 }
 
 export function coursePath(course) {
@@ -108,6 +145,7 @@ export function localized(item, lang) {
 }
 
 export const COVER_MAX_BYTES = 2 * 1024 * 1024;
+export const AVATAR_MAX_BYTES = 400 * 1024;
 
 function coverCrop(img) {
   const ratio = 16 / 9;
@@ -179,9 +217,90 @@ export function readCoverAsDataUrl(file) {
   });
 }
 
+export function readAvatarAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) return reject(new Error("bad-image"));
+    if (!String(file.type || "").startsWith("image/")) return reject(new Error("bad-image"));
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = async () => {
+      URL.revokeObjectURL(url);
+      try {
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        let size = Math.min(320, side);
+        let quality = 0.86;
+        let best = null;
+        for (let i = 0; i < 10; i += 1) {
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          canvas.getContext("2d").drawImage(img, sx, sy, side, side, 0, 0, size, size);
+          const blob = await canvasToBlob(canvas, quality);
+          if (blob) best = blob;
+          if (blob && blob.size <= AVATAR_MAX_BYTES) break;
+          if (quality > 0.55) quality -= 0.1;
+          else size = Math.max(96, Math.round(size * 0.82));
+          if (size <= 96 && quality <= 0.55) break;
+        }
+        if (!best) return reject(new Error("bad-image"));
+        resolve(await blobToDataUrl(best));
+      } catch {
+        reject(new Error("bad-image"));
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("bad-image"));
+    };
+    img.src = url;
+  });
+}
+
+export async function squareImageToAvatarDataUrl(img, sx, sy, side) {
+  const srcSide = Math.max(1, side);
+  let size = Math.min(320, Math.round(srcSide));
+  let quality = 0.86;
+  let best = null;
+  for (let i = 0; i < 10; i += 1) {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    canvas.getContext("2d").drawImage(img, sx, sy, srcSide, srcSide, 0, 0, size, size);
+    const blob = await canvasToBlob(canvas, quality);
+    if (blob) best = blob;
+    if (blob && blob.size <= AVATAR_MAX_BYTES) break;
+    if (quality > 0.55) quality -= 0.1;
+    else size = Math.max(96, Math.round(size * 0.82));
+    if (size <= 96 && quality <= 0.55) break;
+  }
+  if (!best) throw new Error("bad-image");
+  return blobToDataUrl(best);
+}
+
 export function dashPath(user) {
   if (!user) return "/login";
   if (user.role === "admin") return "/admin/dashboard";
   if (user.role === "teacher") return "/teacher/dashboard";
   return "/student/dashboard";
+}
+
+export async function startCourseTrial({ nav, user, showToast, t, courseId }) {
+  if (!user) {
+    nav("/login", { state: { from: `/courses/${courseId}` } });
+    return null;
+  }
+  if (user.role !== "student") {
+    showToast(t.onlyStudentTrial);
+    return null;
+  }
+  try {
+    const res = await api(`/api/courses/${encodeURIComponent(courseId)}/trial`, { method: "POST" });
+    showToast(t.toastTrial);
+    return res;
+  } catch (err) {
+    showToast(err.message || t.toastTrialUsed);
+    return null;
+  }
 }
