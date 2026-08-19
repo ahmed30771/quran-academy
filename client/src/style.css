@@ -466,6 +466,41 @@ html[lang="ur"] label {
   background: var(--gold-soft);
 }
 
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.btn-shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 35%,
+    rgba(255, 255, 255, 0.38) 50%,
+    rgba(255, 255, 255, 0.08) 65%,
+    transparent 100%
+  );
+  transform: translateX(-180%) skewX(-18deg);
+  animation: btn-shimmer-sweep 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes btn-shimmer-sweep {
+  0% { transform: translateX(-180%) skewX(-18deg); }
+  55%, 100% { transform: translateX(380%) skewX(-18deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-shimmer::before {
+    animation: none;
+  }
+}
+
 .btn-ghost {
   background: transparent;
   border-color: var(--emerald);
@@ -806,6 +841,10 @@ html[lang="ur"] label {
 
 .hero-cover h1 {
   color: #fff;
+}
+
+html[lang="en"] .hero-cover h1 {
+  line-height: 1.05;
 }
 
 .hero-cover .intro {

@@ -2,6 +2,8 @@ import { query } from "./db.js";
 import {
   blogSource,
   courseSource,
+  reviewSource,
+  teacherSource,
   isMixedText,
   leftoverEnglish,
   localeNeedsRefresh,
@@ -58,4 +60,20 @@ export function ensureCourseLocale(row) {
 
 export function ensureBlogLocale(row) {
   return fillLocale("blog_posts", row, blogSource(row));
+}
+
+export function saveReviewLocale(row) {
+  return fillLocale("reviews", row, reviewSource(row));
+}
+
+export function ensureReviewLocale(row) {
+  return fillLocale("reviews", row, reviewSource(row));
+}
+
+export function saveTeacherLocale(row) {
+  return fillLocale("users", row, teacherSource(row));
+}
+
+export function ensureTeacherLocale(row) {
+  return fillLocale("users", row, teacherSource(row));
 }

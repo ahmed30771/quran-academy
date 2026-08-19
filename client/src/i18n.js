@@ -168,6 +168,8 @@ export const i18n = {
     cHifz: "Hifz Track",
     cAdv: "Advanced Tajweed",
     cArabic: "Quranic Arabic Basics",
+    cNoorani: "Noorani Qaida",
+    cTajweedQuran: "Tajweed-ul-Quran",
     cFamily: "Family Recitation",
 
     teachKicker: "Teachers",
@@ -826,6 +828,8 @@ export const i18n = {
     cHifz: "حفظ ٹریک",
     cAdv: "اعلیٰ تجوید",
     cArabic: "قرآنی عربی کی بنیاد",
+    cNoorani: "نورانی قاعدہ",
+    cTajweedQuran: "تجوید القرآن",
     cFamily: "خاندانی تلاوت",
 
     teachKicker: "اساتذہ",

@@ -3,6 +3,8 @@ const LATIN_WORD = /[A-Za-z]{3,}/;
 
 const COURSE_KEYS = ["title", "blurb", "full_blurb", "intro", "description", "who_for", "learnings", "duration", "length", "frequency", "requirements"];
 const BLOG_KEYS = ["title", "tag", "excerpt", "body"];
+const REVIEW_KEYS = ["text", "country"];
+const TEACHER_KEYS = ["name", "bio", "introduction", "experience", "qualifications", "subjects"];
 
 const EXACT = new Map(
   [
@@ -58,6 +60,24 @@ const EXACT = new Map(
     ["arrive five minutes early with a quran nearby.", "پانچ منٹ پہلے پہنچیں، قرآن قریب رکھیں۔"],
     ["revision keeps earlier pages strong.", "دور پہلے صفحات کو مضبوط رکھتا ہے۔"],
     ["adult beginners are welcome in nazra and tajweed.", "بالغ مبتدی ناظرہ اور تجوید میں خوش آمدید ہیں۔"],
+    ["my daughter looks forward to class. the teacher is patient and the tajweed corrections are clear.", "میری بیٹی کلاس کا انتظار کرتی ہے۔ استاد بردبار ہیں اور تجوید کی اصلاح واضح ہے۔"],
+    ["i started as an adult with almost no recitation. six months later i can read short surahs with confidence.", "میں بالغ کے طور پر تقریباً بغیر تلاوت کے شروع ہوا۔ چھ مہینے بعد مختصر سورتیں اعتماد سے پڑھ سکتا ہوں۔"],
+    ["flexible timing around school. the free trial made it easy to see if the teacher was a good match.", "اسکول کے ساتھ لچکدار وقت۔ مفت ٹرائل سے پتہ چلا کہ استاد مناسب ہیں یا نہیں۔"],
+    ["hifz track is structured without feeling rushed. weekly revision saved my son's earlier pages.", "حفظ کا ٹریک منظم ہے، جلدی کا احساس نہیں۔ ہفتہ وار دور نے میرے بیٹے کے پرانے صفحات بچا لیے۔"],
+    ["certified teachers, calm design, and whatsapp support when we needed to reschedule.", "سند یافتہ اساتذہ، پرسکون ڈیزائن، اور وقت بدلنے پر واٹس ایپ سپورٹ۔"],
+    ["small group for my twins worked well. they stay engaged and we see notes after each lesson.", "میرے جڑواں بچوں کے لیے چھوٹا گروپ اچھا رہا۔ وہ مصروف رہتے ہیں اور ہر سبق کے بعد نوٹس ملتے ہیں۔"],
+    ["united kingdom", "برطانیہ"],
+    ["united states", "امریکہ"],
+    ["canada", "کینیڈا"],
+    ["pakistan", "پاکستان"],
+    ["germany", "جرمنی"],
+    ["uae", "متحدہ عرب امارات"],
+    ["ustadha amina", "استادہ آمنہ"],
+    ["qari yusuf", "قاری یوسف"],
+    ["qari hassan", "قاری حسن"],
+    ["ijazah in hafs. kids tajweed.", "حفص میں اجازہ۔ بچوں کی تجوید۔"],
+    ["hifz track for adults.", "بالغوں کے لیے حفظ ٹریک۔"],
+    ["hifz · adults.", "حفظ · بالغ۔"],
   ].map(([en, ur]) => [norm(en), ur])
 );
 
@@ -164,6 +184,9 @@ async function mymemoryUrdu(text) {
 }
 
 const TERM_FIX = [
+  [/Ustadha/gi, "استادہ"],
+  [/Ustadh/gi, "استاد"],
+  [/Qari/gi, "قاری"],
   [/Noorani Qaida/gi, "نورانی قاعدہ"],
   [/Tajweed-ul-Quran/gi, "تجوید القرآن"],
   [/Hifz-ul-Quran/gi, "حفظ القرآن"],
@@ -261,4 +284,12 @@ export function blogSource(row) {
   return pick(row, BLOG_KEYS);
 }
 
-export { COURSE_KEYS, BLOG_KEYS };
+export function reviewSource(row) {
+  return pick(row, REVIEW_KEYS);
+}
+
+export function teacherSource(row) {
+  return pick(row, TEACHER_KEYS);
+}
+
+export { COURSE_KEYS, BLOG_KEYS, REVIEW_KEYS, TEACHER_KEYS };

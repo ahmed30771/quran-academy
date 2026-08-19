@@ -3,7 +3,7 @@ import { query, queryOne } from "../db.js";
 import { authRequired, requireRole, optionalAuth } from "../middleware/auth.js";
 import { recordAudit } from "../middleware/ownership.js";
 import { coursePayload, STATUSES } from "../courseUtils.js";
-import { ensureCourseLocale, saveCourseLocale } from "../locale.js";
+import { ensureCourseLocale, ensureTeacherLocale, saveCourseLocale } from "../locale.js";
 
 const router = express.Router();
 
@@ -88,14 +88,14 @@ router.get("/:id/teachers", async (req, res) => {
     const course = await findCourse(req.params.id);
     if (!course) return res.status(404).json({ error: "Course not found." });
     const teachers = await query(
-      `SELECT u.id, u.name, u.bio, u.avatar, u.gender, u.teaching_languages, u.teach_kids, u.teach_adults, u.experience
+      `SELECT u.id, u.name, u.bio, u.avatar, u.gender, u.teaching_languages, u.teach_kids, u.teach_adults, u.experience, u.introduction, u.locale_ur
        FROM teacher_courses tc
        JOIN users u ON u.id=tc.teacher_id
        WHERE tc.course_id=$1 AND tc.status='approved' AND u.role='teacher' AND u.status='active'
        ORDER BY u.name`,
       [course.id]
     );
-    res.json(teachers);
+    res.json(await Promise.all(teachers.map(ensureTeacherLocale)));
   } catch (err) {
     fail(res, err, "Could not load teachers.");
   }

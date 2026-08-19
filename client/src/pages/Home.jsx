@@ -50,7 +50,7 @@ export default function Home() {
     [t.faq4q, t.faq4a],
   ];
   const faculty = teachers;
-  const topReviews = reviews.slice(0, 4);
+  const topReviews = reviews.slice(0, 4).map((row) => localized(row, lang));
   const featuredReview = topReviews[0];
   const otherReviews = topReviews.slice(1);
   const reviewAvg = topReviews.length
@@ -73,7 +73,7 @@ export default function Home() {
             <p className="intro">{t.heroIntro}</p>
             <p className="hero-note">{t.heroNote}</p>
             <div className="btn-row">
-              <Link className="btn btn-gold" to="/courses">{t.startTrial}</Link>
+              <Link className="btn btn-gold btn-shimmer" to="/courses">{t.startTrial}</Link>
               <Link className="btn btn-ghost" to="/courses">{t.viewCourses}</Link>
             </div>
             <div className="trust-row">
@@ -146,7 +146,7 @@ export default function Home() {
               <div className="tut-actions">
                 <button className="btn btn-ghost btn-sm" type="button" onClick={() => setTut((n) => Math.max(0, n - 1))}>{t.back}</button>
                 <button className="btn btn-primary btn-sm" type="button" onClick={() => setTut((n) => Math.min(3, n + 1))}>{t.next}</button>
-                <Link className="btn btn-gold btn-sm" to="/login">{t.createAccount}</Link>
+                <Link className="btn btn-gold btn-sm btn-shimmer" to="/login">{t.createAccount}</Link>
               </div>
             </div>
           </div>

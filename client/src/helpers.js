@@ -65,6 +65,14 @@ export function initials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+export function lastName(name) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  return parts[parts.length - 1] || "";
+}
+
 export function firstLastName(name) {
   const parts = String(name || "")
     .trim()
@@ -141,6 +149,14 @@ export function localized(item, lang) {
     excerpt: pick("excerpt"),
     body: pick("body"),
     tag: pick("tag"),
+    text: pick("text"),
+    country: pick("country"),
+    name: pick("name"),
+    bio: pick("bio"),
+    introduction: pick("introduction"),
+    experience: pick("experience"),
+    qualifications: pick("qualifications"),
+    subjects: pick("subjects"),
   };
 }
 

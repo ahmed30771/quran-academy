@@ -25,6 +25,7 @@ export default function TeacherProfile() {
     );
   }
 
+  const view = localized(teacher, lang);
   const audience = [teacher.teachKids ? t.filterKids : "", teacher.teachAdults ? t.filterAdults : ""].filter(Boolean).join(" · ");
 
   return (
@@ -35,8 +36,8 @@ export default function TeacherProfile() {
           <div className="avatar avatar-lg">{teacher.avatar ? <img src={teacher.avatar} alt="" /> : initials(teacher.name)}</div>
           <div>
             <p className="kicker">{t.teacherProfile}</p>
-            <h1>{teacher.name}</h1>
-            <p className="lede">{teacher.introduction || teacher.bio || t.noBio}</p>
+            <h1>{view.name}</h1>
+            <p className="lede">{view.introduction || view.bio || t.noBio}</p>
             <div className="meta">
               {langLabel(teacher.teachingLanguages, t) ? <span>{langLabel(teacher.teachingLanguages, t)}</span> : null}
               {audience ? <span>· {audience}</span> : null}
@@ -47,16 +48,16 @@ export default function TeacherProfile() {
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap">
           <div className="grid-2">
-            {teacher.experience ? (
+            {view.experience ? (
               <article className="card">
                 <h3>{t.experience || "Experience"}</h3>
-                <p>{teacher.experience}</p>
+                <p>{view.experience}</p>
               </article>
             ) : null}
-            {teacher.qualifications ? (
+            {view.qualifications ? (
               <article className="card">
                 <h3>Qualifications</h3>
-                <p>{teacher.qualifications}</p>
+                <p>{view.qualifications}</p>
               </article>
             ) : null}
           </div>

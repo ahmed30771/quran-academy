@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { queryOne } from "../db.js";
 import { authRequired, publicUser } from "../middleware/auth.js";
 import { validatePassword } from "../validate.js";
+import { saveTeacherLocale } from "../locale.js";
 
 const router = express.Router();
 
@@ -64,6 +65,11 @@ router.put("/", authRequired, async (req, res) => {
       req.user.id,
     ]
   );
+  if (user?.role === "teacher") {
+    await queryOne("UPDATE users SET locale_ur=NULL WHERE id=$1", [user.id]);
+    const fresh = await queryOne("SELECT * FROM users WHERE id=$1", [user.id]);
+    await saveTeacherLocale(fresh);
+  }
   res.json({ user: publicUser(user) });
 });
 

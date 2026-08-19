@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { dashPath, firstLastName, initials } from "../helpers";
+import { dashPath, lastName, initials } from "../helpers";
 
 export default function Header() {
   const { t, lang, setLang, currency, setCurrency, user } = useApp();
@@ -73,7 +73,7 @@ export default function Header() {
                 <span className="avatar dash-avatar">
                   {user.avatar ? <img src={user.avatar} alt="" /> : initials(user.name)}
                 </span>
-                <span className="header-who-name">{firstLastName(user.name)}</span>
+                <span className="header-who-name">{lastName(user.name)}</span>
               </Link>
             ) : (
               <Link className="btn btn-gold btn-sm" to="/login">{t.login}</Link>

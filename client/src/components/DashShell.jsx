@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
-import { ago, dashPath, firstLastName, initials, validatePassword } from "../helpers";
+import { ago, dashPath, lastName, initials, validatePassword } from "../helpers";
 import AvatarCrop from "./AvatarCrop";
 
 export default function DashShell({ role, searchPlaceholder, navLinks, activeKey, onNavChange, children }) {
@@ -274,7 +274,7 @@ export default function DashShell({ role, searchPlaceholder, navLinks, activeKey
                 <span className="avatar dash-avatar">
                   {user.avatar ? <img src={user.avatar} alt="" /> : initials(user.name)}
                 </span>
-                <span className="who-name">{firstLastName(user.name)}</span>
+                <span className="who-name">{lastName(user.name)}</span>
               </button>
               <div className="drop-panel drop-menu">
                 <button type="button" onClick={() => { closeDrops(); setModal("profile"); }}>{t.profile}</button>

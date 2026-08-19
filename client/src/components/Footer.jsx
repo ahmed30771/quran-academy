@@ -34,9 +34,9 @@ export default function Footer({ onChat }) {
             <div>
               <h4>{t.footPrograms}</h4>
               <ul>
-                <li><Link to="/courses/noorani-qaida">Noorani Qaida</Link></li>
+                <li><Link to="/courses/noorani-qaida">{t.cNoorani}</Link></li>
                 <li><Link to="/courses/nazra">{t.cNazra}</Link></li>
-                <li><Link to="/courses/tajweed-ul-quran">Tajweed-ul-Quran</Link></li>
+                <li><Link to="/courses/tajweed-ul-quran">{t.cTajweedQuran}</Link></li>
                 <li><Link to="/courses/hifz">{t.cHifz}</Link></li>
                 <li><Link to="/courses/arabic">{t.cArabic}</Link></li>
                 <li><Link to="/courses">{t.courses}</Link></li>
@@ -55,7 +55,7 @@ export default function Footer({ onChat }) {
             <div>
               <h4>{t.contact}</h4>
               <ul>
-                <li><a href={SITE.WHATSAPP} target="_blank" rel="noopener">WhatsApp {SITE.PHONE}</a></li>
+                <li><a href={SITE.WHATSAPP} target="_blank" rel="noopener" aria-label="WhatsApp" style={{ whiteSpace: "nowrap" }}>{SITE.PHONE}</a></li>
                 <li><a href={`mailto:${SITE.EMAIL}`}>{SITE.EMAIL}</a></li>
                 <li><Link to="/contact">{t.footForm}</Link></li>
               </ul>

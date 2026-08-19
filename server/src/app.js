@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { query } from "./db.js";
+import { ensureReviewLocale, ensureTeacherLocale } from "./locale.js";
 import { ensureCourseSchemaOnce } from "./ensure.js";
 import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
@@ -95,7 +96,8 @@ api.get("/health", async (_req, res) => {
 
 api.get("/reviews", async (_req, res) => {
   try {
-    res.json(await query("SELECT * FROM reviews ORDER BY stars DESC, id DESC"));
+    const rows = await query("SELECT * FROM reviews ORDER BY stars DESC, id DESC");
+    res.json(await Promise.all(rows.map(ensureReviewLocale)));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not load reviews." });
@@ -104,12 +106,11 @@ api.get("/reviews", async (_req, res) => {
 
 api.get("/teachers", async (_req, res) => {
   try {
-    res.json(
-      await query(
-        `SELECT id, name, bio, avatar, gender, teaching_languages, teach_kids, teach_adults, experience, introduction, COALESCE(rating, 5) AS rating
-         FROM users WHERE role='teacher' AND status='active' ORDER BY name`
-      )
+    const rows = await query(
+      `SELECT id, name, bio, avatar, gender, teaching_languages, teach_kids, teach_adults, experience, introduction, locale_ur, COALESCE(rating, 5) AS rating
+       FROM users WHERE role='teacher' AND status='active' ORDER BY name`
     );
+    res.json(await Promise.all(rows.map(ensureTeacherLocale)));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not load teachers." });

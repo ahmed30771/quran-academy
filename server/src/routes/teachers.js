@@ -2,6 +2,7 @@ import express from "express";
 import { query, queryOne } from "../db.js";
 import { authRequired, requireRole } from "../middleware/auth.js";
 import { ensureTeacherAccess, recordAudit } from "../middleware/ownership.js";
+import { ensureTeacherLocale } from "../locale.js";
 
 const router = express.Router();
 const LANGS = ["urdu", "english", "both"];
@@ -22,6 +23,7 @@ function publicTeacher(row) {
     introduction: row.introduction || "",
     rating: Number(row.rating) || 5,
     status: row.status,
+    locale_ur: row.locale_ur || {},
   };
 }
 
@@ -108,12 +110,13 @@ router.get("/:id/courses", async (req, res) => {
 
 router.get("/:id/public", async (req, res) => {
   const teacher = await queryOne(
-    `SELECT id, name, avatar, bio, gender, teaching_languages, teach_kids, teach_adults, qualifications, experience, introduction, status, COALESCE(rating, 5) AS rating
+    `SELECT id, name, avatar, bio, gender, teaching_languages, teach_kids, teach_adults, qualifications, experience, introduction, locale_ur, status, COALESCE(rating, 5) AS rating
      FROM users WHERE id=$1 AND role='teacher' AND status='active'`,
     [req.params.id]
   );
   if (!teacher) return res.status(404).json({ error: "Teacher not found." });
-  res.json({ teacher: publicTeacher(teacher), courses: await teacherCourses(teacher.id, ["approved"]) });
+  const localized = await ensureTeacherLocale(teacher);
+  res.json({ teacher: publicTeacher(localized), courses: await teacherCourses(teacher.id, ["approved"]) });
 });
 
 router.get("/:id", authRequired, ensureTeacherAccess, async (req, res) => {

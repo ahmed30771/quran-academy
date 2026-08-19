@@ -124,13 +124,16 @@ export default function CourseDetail() {
             <h2>{t.teachersForCourse}</h2>
           </div>
           <div className="grid-3">
-            {teachers.length ? teachers.map((p) => (
+            {teachers.length ? teachers.map((p) => {
+              const view = localized(p, lang);
+              return (
               <Link className="card teacher-card" to={`/teachers/${p.id}`} key={p.id}>
                 <div className="avatar">{p.avatar ? <img src={p.avatar} alt="" /> : initials(p.name)}</div>
-                <h3>{p.name}</h3>
+                <h3>{view.name}</h3>
                 <p>{langLabel(p.teaching_languages, t)}</p>
               </Link>
-            )) : <p className="lede">{t.courseTeachersEmpty}</p>}
+              );
+            }) : <p className="lede">{t.courseTeachersEmpty}</p>}
           </div>
         </div>
       </section>
