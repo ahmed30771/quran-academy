@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
-import { audienceLabel, coursePath, levelLabel, localized, starLine, startCourseTrial } from "../helpers";
+import { localized, starLine, startCourseTrial } from "../helpers";
 import TeacherCard from "../components/TeacherCard";
+import ProgramDeck from "../components/ProgramDeck";
 
 export default function Home() {
   const { t, lang, currency, user, showToast } = useApp();
@@ -57,9 +58,6 @@ export default function Home() {
     ? (topReviews.reduce((sum, r) => sum + (Number(r.stars) || 0), 0) / topReviews.length).toFixed(1)
     : "";
   const featured = courses.map((row) => localized(row, lang));
-  const leadCourse = featured[0];
-  const stackCourses = featured.slice(1, 3);
-  const stripCourses = featured.slice(3, 8);
   const loopTeachers = faculty.length > 2 ? [...faculty, ...faculty] : faculty;
 
   return (
@@ -178,7 +176,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section" id="programs">
+      <section className="section section-emerald" id="programs">
         <div className="wrap">
           <div className="section-head center">
             <p className="kicker">{t.progFeatKicker}</p>
@@ -186,82 +184,17 @@ export default function Home() {
             <h2>{t.progFeatTitle}</h2>
             <p className="lede">{t.progFeatLede}</p>
           </div>
-          <div className="prog-feat">
-            {leadCourse ? (
-              <article className="card prog-lead">
-                <span className="badge">{t.startHere}</span>
-                {leadCourse.image_url ? (
-                  <div className="course-cover"><img src={leadCourse.image_url} alt="" /></div>
-                ) : (
-                  <div className="icon-orb">{leadCourse.icon || "ق"}</div>
-                )}
-                <h3>{leadCourse.title}</h3>
-                <div className="meta">
-                  <span>{audienceLabel(leadCourse.audiences, t) || t.filterAll}</span>
-                  <span>·</span>
-                  <span>{levelLabel(leadCourse.levels, t) || leadCourse.level}</span>
-                  {leadCourse.length ? <><span>·</span><span>{leadCourse.length}</span></> : null}
-                </div>
-                {Number(leadCourse.price_usd) > 0 ? <p className="price">{m(leadCourse.price_usd)} <span>{t.perMonth}</span></p> : null}
-                <p>{leadCourse.blurb || leadCourse.full_blurb}</p>
-                <p className="trial-note">{t.firstDayTrial}</p>
-                <div className="btn-row">
-                  <Link className="btn btn-gold btn-sm" to={coursePath(leadCourse)}>{t.seeDetails}</Link>
-                  <button className="btn btn-primary btn-sm" type="button" disabled={trialIds.includes(leadCourse.id) || trialBusy === leadCourse.id} onClick={() => bookTrial(leadCourse.id)}>
-                    {trialIds.includes(leadCourse.id) ? t.trialUsed : trialBusy === leadCourse.id ? "..." : t.bookTrial}
-                  </button>
-                </div>
-              </article>
-            ) : (
-              <p className="lede">{t.noFeaturedCourses}</p>
-            )}
-            {stackCourses.length ? (
-              <div className="prog-stack">
-                {stackCourses.map((c) => (
-                  <article className="card prog-side" key={c.id}>
-                    <div className="icon-orb">{c.icon || "ق"}</div>
-                    <div>
-                      <h3>{c.title}</h3>
-                      <div className="meta">
-                        <span>{audienceLabel(c.audiences, t) || t.filterAll}</span>
-                        {c.length ? <><span>·</span><span>{c.length}</span></> : null}
-                      </div>
-                      {Number(c.price_usd) > 0 ? <p className="price">{m(c.price_usd)} <span>{t.perMonth}</span></p> : null}
-                      <p>{c.blurb || c.full_blurb}</p>
-                      <p className="trial-note">{t.firstDayTrial}</p>
-                      <div className="btn-row">
-                        <Link className="btn btn-primary btn-sm" to={coursePath(c)}>{t.seeDetails}</Link>
-                        <button className="btn btn-gold btn-sm" type="button" disabled={trialIds.includes(c.id) || trialBusy === c.id} onClick={() => bookTrial(c.id)}>
-                          {trialIds.includes(c.id) ? t.trialUsed : trialBusy === c.id ? "..." : t.bookTrial}
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : null}
-          </div>
-          {stripCourses.length ? (
-            <div className="prog-strip">
-              {stripCourses.map((c) => (
-                <article className="card" key={c.id}>
-                  <div className="icon-orb">{c.icon || "ق"}</div>
-                  <h3>{c.title}</h3>
-                  {Number(c.price_usd) > 0 ? <p className="price">{m(c.price_usd)} <span>{t.perMonth}</span></p> : null}
-                  <p>{c.blurb || c.full_blurb}</p>
-                  <p className="trial-note">{t.firstDayTrial}</p>
-                  <div className="btn-row">
-                    <Link className="btn btn-ghost btn-sm" to={coursePath(c)}>{t.seeDetails}</Link>
-                    <button className="btn btn-gold btn-sm" type="button" disabled={trialIds.includes(c.id) || trialBusy === c.id} onClick={() => bookTrial(c.id)}>
-                      {trialIds.includes(c.id) ? t.trialUsed : trialBusy === c.id ? "..." : t.bookTrial}
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : null}
+          <ProgramDeck
+            courses={featured}
+            t={t}
+            m={m}
+            lang={lang}
+            trialIds={trialIds}
+            trialBusy={trialBusy}
+            onTrial={bookTrial}
+          />
           <div className="btn-row" style={{ justifyContent: "center", marginTop: "1.6rem" }}>
-            <Link className="btn btn-primary" to="/courses">{t.viewCourses}</Link>
+            <Link className="btn btn-gold" to="/courses">{t.viewCourses}</Link>
           </div>
         </div>
       </section>
