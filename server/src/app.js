@@ -3,7 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { query } from "./db.js";
-import { ensureReviewLocale, ensureTeacherLocale } from "./locale.js";
+import { ensureTeacherLocale } from "./locale.js";
 import { ensureCourseSchemaOnce } from "./ensure.js";
 import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
@@ -17,6 +17,7 @@ import attendanceRoutes from "./routes/attendance.js";
 import progressRoutes from "./routes/progress.js";
 import assignmentRoutes from "./routes/assignments.js";
 import notificationRoutes from "./routes/notifications.js";
+import reviewRoutes from "./routes/reviews.js";
 
 dotenv.config();
 
@@ -94,16 +95,7 @@ api.get("/health", async (_req, res) => {
   }
 });
 
-api.get("/reviews", async (_req, res) => {
-  try {
-    const rows = await query("SELECT * FROM reviews ORDER BY stars DESC, id DESC");
-    res.json(await Promise.all(rows.map(ensureReviewLocale)));
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Could not load reviews." });
-  }
-});
-
+api.use("/reviews", reviewRoutes);
 api.get("/teachers", async (_req, res) => {
   try {
     const rows = await query(

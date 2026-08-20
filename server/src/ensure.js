@@ -54,6 +54,9 @@ export async function ensureCourseSchema() {
   await query("ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS image_url TEXT");
   await query("ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS locale_ur JSONB");
   await query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS locale_ur JSONB");
+  await query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL");
+  await query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()");
+  await query("CREATE UNIQUE INDEX IF NOT EXISTS reviews_user_id_uq ON reviews (user_id) WHERE user_id IS NOT NULL");
   await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS locale_ur JSONB");
   await query("UPDATE courses SET slug = id WHERE slug IS NULL OR slug = ''");
   await query("CREATE UNIQUE INDEX IF NOT EXISTS courses_slug_idx ON courses (slug)");

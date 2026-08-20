@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
-import { localized, starLine, startCourseTrial } from "../helpers";
+import { localized, startCourseTrial } from "../helpers";
 import TeacherCard from "../components/TeacherCard";
 import ProgramDeck from "../components/ProgramDeck";
 import TutorialProcess from "../components/TutorialProcess";
+import ReviewSpotlight from "../components/ReviewSpotlight";
 
 export default function Home() {
   const { t, lang, currency, user, showToast } = useApp();
@@ -45,9 +46,7 @@ export default function Home() {
     [t.faq4q, t.faq4a],
   ];
   const faculty = teachers;
-  const topReviews = reviews.slice(0, 4).map((row) => localized(row, lang));
-  const featuredReview = topReviews[0];
-  const otherReviews = topReviews.slice(1);
+  const topReviews = reviews.slice(0, 6).map((row) => localized(row, lang));
   const reviewAvg = topReviews.length
     ? (topReviews.reduce((sum, r) => sum + (Number(r.stars) || 0), 0) / topReviews.length).toFixed(1)
     : "";
@@ -242,7 +241,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section" id="reviews">
+      <section className="section section-sage" id="reviews">
         <div className="wrap">
           <div className="section-head center">
             <p className="kicker">{t.revKicker}</p>
@@ -251,36 +250,25 @@ export default function Home() {
             <p className="lede">{t.revLede}</p>
           </div>
           {topReviews.length ? (
-            <>
-              <div className="rev-score">
-                <strong className="rev-score-num">{reviewAvg}</strong>
-                <div>
-                  <div className="stars">{starLine(Number(reviewAvg))}</div>
-                  <p>{t.revScoreNote}</p>
-                </div>
-              </div>
-              {featuredReview ? (
-                <article className="card review review-feat">
-                  <div className="stars">{starLine(featuredReview.stars)}</div>
-                  <p>{featuredReview.text}</p>
-                  <footer>{featuredReview.name}<span>{featuredReview.country}</span></footer>
-                </article>
-              ) : null}
-              {otherReviews.length ? (
-                <div className="grid-3">
-                  {otherReviews.map((r) => (
-                    <article className="card review" key={r.id || `${r.name}-${r.text}`}>
-                      <div className="stars">{starLine(r.stars)}</div>
-                      <p>{r.text}</p>
-                      <footer>{r.name}<span>{r.country}</span></footer>
-                    </article>
-                  ))}
-                </div>
-              ) : null}
-            </>
+            <ReviewSpotlight
+              reviews={topReviews}
+              avg={reviewAvg}
+              note={t.revScoreNote}
+              t={t}
+            />
           ) : (
             <p className="lede">{t.noReviewsYet}</p>
           )}
+          <div className="btn-row" style={{ justifyContent: "center", marginTop: "1.4rem" }}>
+            {user?.role === "student" ? (
+              <Link className="btn btn-primary" to="/student/dashboard#review">{t.leaveReview}</Link>
+            ) : (
+              <Link className="btn btn-ghost" to="/login">{t.leaveReviewLogin}</Link>
+            )}
+          </div>
+          <p className="lede" style={{ textAlign: "center", marginTop: "0.6rem", maxWidth: "36rem", marginInline: "auto" }}>
+            {t.leaveReviewHint}
+          </p>
         </div>
       </section>
 

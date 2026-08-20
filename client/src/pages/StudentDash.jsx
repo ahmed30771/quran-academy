@@ -1,23 +1,70 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import DashShell from "../components/DashShell";
 import { useApp } from "../context/AppContext";
 import { api, SITE } from "../api";
+import { starLine } from "../helpers";
 
 export default function StudentDash() {
   const { t, showToast, user } = useApp();
+  const location = useLocation();
   const [active, setActive] = useState("overview");
   const [data, setData] = useState({ classes: [], homework: [], enrollments: [], stats: {} });
+  const [review, setReview] = useState(null);
+  const [stars, setStars] = useState(5);
+  const [country, setCountry] = useState("");
+  const [text, setText] = useState("");
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewErr, setReviewErr] = useState("");
+
+  useEffect(() => {
+    const tab = String(location.hash || "").replace(/^#/, "");
+    if (tab === "review") setActive("review");
+  }, [location.hash]);
 
   useEffect(() => {
     api("/api/dash/student").then(setData).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (active !== "review") return;
+    api("/api/reviews/mine")
+      .then((row) => {
+        setReview(row);
+        if (row) {
+          setStars(Number(row.stars) || 5);
+          setCountry(row.country || "");
+          setText(row.text || "");
+        }
+      })
+      .catch(() => {});
+  }, [active]);
 
   const next = data.classes[0];
   const course = data.enrollments[0];
   const stats = data.stats || {};
   const firstName = useMemo(() => (user?.name || "").split(" ")[0] || "Student", [user]);
   const lessonsText = `${stats.lessonsDone || 0} / ${stats.totalLessons || 20} lessons`;
+
+  async function saveReview(e) {
+    e.preventDefault();
+    setReviewErr("");
+    setReviewBusy(true);
+    try {
+      const saved = await api("/api/reviews", {
+        method: "POST",
+        body: { stars, country, text },
+      });
+      setReview(saved);
+      showToast(review ? t.toastReviewUpdated : t.toastReviewSaved);
+    } catch (err) {
+      setReviewErr(err.message || t.errReviewSave);
+      showToast(err.message || t.errReviewSave);
+    } finally {
+      setReviewBusy(false);
+    }
+  }
+
   const sections = {
     overview: (
       <>
@@ -93,6 +140,70 @@ export default function StudentDash() {
         <p className="price" style={{ fontSize: "1.2rem" }}>{lessonsText}</p>
       </article>
     ),
+    review: (
+      <article className="card review-dash" id="review">
+        <p className="kicker">{t.myReviewKicker}</p>
+        <h3>{t.myReviewTitle}</h3>
+        <p>{t.myReviewLede}</p>
+        {review ? (
+          <p className="review-dash-note">{t.myReviewExists}</p>
+        ) : null}
+        <form className="review-dash-form" onSubmit={saveReview}>
+          <label>
+            {t.yourName}
+            <input type="text" value={user?.name || ""} readOnly />
+          </label>
+          <label>
+            {t.yourCountry}
+            <input
+              type="text"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder={t.phCountry}
+              required
+              maxLength={80}
+            />
+          </label>
+          <fieldset className="star-pick">
+            <legend>{t.yourRating}</legend>
+            <div className="star-pick-row" role="radiogroup" aria-label={t.yourRating}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  aria-checked={stars === n}
+                  className={`star-pick-btn${stars >= n ? " is-on" : ""}`}
+                  onClick={() => setStars(n)}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <p className="stars" aria-hidden="true">{starLine(stars)}</p>
+          </fieldset>
+          <label>
+            {t.yourReview}
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={t.phReview}
+              required
+              minLength={20}
+              maxLength={600}
+              rows={5}
+            />
+          </label>
+          {reviewErr ? <p className="field-error">{reviewErr}</p> : null}
+          <div className="btn-row">
+            <button className="btn btn-primary" type="submit" disabled={reviewBusy}>
+              {reviewBusy ? t.saving : review ? t.updateReview : t.submitReview}
+            </button>
+            <Link className="btn btn-ghost" to="/#reviews">{t.seeReviews}</Link>
+          </div>
+        </form>
+      </article>
+    ),
   };
 
   return (
@@ -106,6 +217,7 @@ export default function StudentDash() {
         { key: "timetable", label: t.timetable },
         { key: "homework", label: t.homework },
         { key: "certificate", label: t.certificate },
+        { key: "review", label: t.navReview },
         { to: "/courses", label: t.browseCourses },
       ]}
     >
