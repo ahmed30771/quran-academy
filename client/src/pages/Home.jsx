@@ -5,11 +5,11 @@ import { api, formatMoney } from "../api";
 import { localized, starLine, startCourseTrial } from "../helpers";
 import TeacherCard from "../components/TeacherCard";
 import ProgramDeck from "../components/ProgramDeck";
+import TutorialProcess from "../components/TutorialProcess";
 
 export default function Home() {
   const { t, lang, currency, user, showToast } = useApp();
   const nav = useNavigate();
-  const [tut, setTut] = useState(0);
   const [faq, setFaq] = useState(0);
   const [reviews, setReviews] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -38,12 +38,6 @@ export default function Home() {
     setTrialBusy("");
   }
   const m = (n) => formatMoney(n, currency);
-  const panels = [
-    [t.tutH1, t.tutP1],
-    [t.tutH2, t.tutP2],
-    [t.tutH3, t.tutP3],
-    [t.tutH4, t.tutP4],
-  ];
   const faqs = [
     [t.faq1q, t.faq1a],
     [t.faq2q, t.faq2a],
@@ -123,31 +117,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section" id="tutorial">
+      <section className="section section-emerald" id="tutorial">
         <div className="wrap">
           <div className="section-head">
             <p className="kicker">{t.tutKicker}</p>
             <h2>{t.tutTitle}</h2>
             <p className="lede">{t.tutLede}</p>
           </div>
-          <div className="tutorial">
-            <div className="tut-nav">
-              {[t.tutNav1, t.tutNav2, t.tutNav3, t.tutNav4].map((label, i) => (
-                <button key={label} type="button" className={tut === i ? "is-on" : ""} onClick={() => setTut(i)}>{label}</button>
-              ))}
-            </div>
-            <div>
-              <div className="tut-panel">
-                <h3>{panels[tut][0]}</h3>
-                <p>{panels[tut][1]}</p>
-              </div>
-              <div className="tut-actions">
-                <button className="btn btn-ghost btn-sm" type="button" onClick={() => setTut((n) => Math.max(0, n - 1))}>{t.back}</button>
-                <button className="btn btn-primary btn-sm" type="button" onClick={() => setTut((n) => Math.min(3, n + 1))}>{t.next}</button>
-                <Link className="btn btn-gold btn-sm btn-shimmer" to="/login">{t.createAccount}</Link>
-              </div>
-            </div>
-          </div>
+          <TutorialProcess t={t} />
         </div>
       </section>
 
@@ -276,7 +253,7 @@ export default function Home() {
           {topReviews.length ? (
             <>
               <div className="rev-score">
-                <strong>{reviewAvg}</strong>
+                <strong className="rev-score-num">{reviewAvg}</strong>
                 <div>
                   <div className="stars">{starLine(Number(reviewAvg))}</div>
                   <p>{t.revScoreNote}</p>

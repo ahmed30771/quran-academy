@@ -132,7 +132,7 @@ export const i18n = {
 
     tutKicker: "Get started",
     tutTitle: "A short tutorial before you enroll",
-    tutLede: "Click through the four cards. This is the same path we use on day one.",
+    tutLede: "Four quiet steps from signup to your first class — the same path we use on day one.",
     tutNav1: "1. Account",
     tutNav2: "2. Pick a course",
     tutNav3: "3. Meet your teacher",
@@ -792,7 +792,7 @@ export const i18n = {
 
     tutKicker: "شروع کریں",
     tutTitle: "داخلے سے پہلے مختصر رہنمائی",
-    tutLede: "چار کارڈز پر کلک کریں۔ یہی راستہ ہم پہلے دن استعمال کرتے ہیں۔",
+    tutLede: "داخلے سے پہلی کلاس تک چار خاموش قدم — یہی راستہ ہم پہلے دن استعمال کرتے ہیں۔",
     tutNav1: "۱. اکاؤنٹ",
     tutNav2: "۲. کورس چنیں",
     tutNav3: "۳. استاد سے ملاقات",
