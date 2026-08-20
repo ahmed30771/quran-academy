@@ -13,7 +13,7 @@ export default function TutorialProcess({ t }) {
   const root = useRef(null);
   const fillRef = useRef(null);
   const pathLen = useRef(0);
-  const [progress, setProgress] = useState(0);
+  const [on, setOn] = useState(() => steps.map(() => false));
 
   useEffect(() => {
     const el = root.current;
@@ -36,11 +36,17 @@ export default function TutorialProcess({ t }) {
       const len = pathLen.current || 1;
       const rect = el.getBoundingClientRect();
       const vh = window.innerHeight || 1;
-      const head = vh * 0.5;
+      const head = vh * 0.72;
       const span = Math.max(rect.bottom - rect.top, 1);
       const p = Math.min(1, Math.max(0, (head - rect.top) / span));
       fill.style.strokeDashoffset = `${len * (1 - p)}`;
-      setProgress(p);
+
+      const slots = el.querySelectorAll(".tut-step-slot");
+      const next = Array.from(slots, (slot) => {
+        const r = slot.getBoundingClientRect();
+        return r.top < head + 80 && r.bottom > 0;
+      });
+      setOn((prev) => (prev.length === next.length && prev.every((v, i) => v === next[i]) ? prev : next));
     }
 
     update();
@@ -68,7 +74,7 @@ export default function TutorialProcess({ t }) {
 
       {steps.map((s, i) => {
         const side = i % 2 === 0 ? "left" : "right";
-        const lit = progress >= (i + 0.35) / steps.length;
+        const lit = !!on[i];
         return (
           <div className="tut-step-slot" key={s.n}>
             <article
