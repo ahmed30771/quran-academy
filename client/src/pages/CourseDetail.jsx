@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
 import { audienceLabel, categoryLabel, initials, langLabel, levelLabel, localized, startCourseTrial } from "../helpers";
+import PageHero from "../components/PageHero";
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -67,14 +68,7 @@ export default function CourseDetail() {
 
   return (
     <main>
-      <section className="page-hero">
-        <div className="pattern-corner tl" />
-        <div className="wrap">
-          <p className="kicker">{t.courseKicker}</p>
-          <h1>{view.title}</h1>
-          <p className="lede">{view.intro || view.blurb}</p>
-        </div>
-      </section>
+      <PageHero kicker={t.courseKicker} title={view.title} lede={view.intro || view.blurb} />
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap course-detail">
           <div className="course-cover course-cover-lg">

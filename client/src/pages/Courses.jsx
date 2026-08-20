@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
 import { audienceLabel, categoryLabel, coursePath, levelLabel, localized, startCourseTrial } from "../helpers";
+import PageHero from "../components/PageHero";
 
 export default function Courses() {
   const { t, lang, currency, user, showToast } = useApp();
@@ -61,14 +62,7 @@ export default function Courses() {
 
   return (
     <main>
-      <section className="page-hero">
-        <div className="pattern-corner tl" />
-        <div className="wrap">
-          <p className="kicker">{t.coursesKicker}</p>
-          <h1>{t.coursesTitle}</h1>
-          <p className="lede">{t.coursesLede}</p>
-        </div>
-      </section>
+      <PageHero kicker={t.coursesKicker} title={t.coursesTitle} lede={t.coursesLede} />
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap">
           <div className="filter-groups">

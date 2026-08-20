@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
 import { coursePath, initials, langLabel, localized } from "../helpers";
+import PageHero from "../components/PageHero";
 
 export default function TeacherProfile() {
   const { id } = useParams();
@@ -30,21 +31,18 @@ export default function TeacherProfile() {
 
   return (
     <main>
-      <section className="page-hero">
-        <div className="pattern-corner tl" />
-        <div className="wrap teacher-hero">
-          <div className="avatar avatar-lg">{teacher.avatar ? <img src={teacher.avatar} alt="" /> : initials(teacher.name)}</div>
-          <div>
-            <p className="kicker">{t.teacherProfile}</p>
-            <h1>{view.name}</h1>
-            <p className="lede">{view.introduction || view.bio || t.noBio}</p>
-            <div className="meta">
-              {langLabel(teacher.teachingLanguages, t) ? <span>{langLabel(teacher.teachingLanguages, t)}</span> : null}
-              {audience ? <span>· {audience}</span> : null}
-            </div>
+      <PageHero wrapClassName="teacher-hero">
+        <div className="avatar avatar-lg">{teacher.avatar ? <img src={teacher.avatar} alt="" /> : initials(teacher.name)}</div>
+        <div>
+          <p className="kicker">{t.teacherProfile}</p>
+          <h1>{view.name}</h1>
+          <p className="lede">{view.introduction || view.bio || t.noBio}</p>
+          <div className="meta">
+            {langLabel(teacher.teachingLanguages, t) ? <span>{langLabel(teacher.teachingLanguages, t)}</span> : null}
+            {audience ? <span>· {audience}</span> : null}
           </div>
         </div>
-      </section>
+      </PageHero>
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap">
           <div className="grid-2">

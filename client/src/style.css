@@ -293,9 +293,12 @@ html[lang="ur"] .table td {
   vertical-align: top;
 }
 
-html[lang="ur"] .hero,
-html[lang="ur"] .page-hero {
+html[lang="ur"] .hero {
   overflow: visible;
+}
+
+html[lang="ur"] .page-hero {
+  overflow: hidden;
 }
 
 html[lang="ur"] .topbar {
@@ -555,6 +558,7 @@ html[lang="ur"] label {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
   pointer-events: none;
   background: radial-gradient(
     220px 90px at var(--mx) var(--my),
@@ -575,11 +579,30 @@ html[lang="ur"] label {
   position: absolute;
   left: 0;
   bottom: 0;
+  z-index: 2;
   height: 2px;
   width: var(--scroll);
   background: var(--gold);
   pointer-events: none;
   transition: width 0.08s linear;
+}
+
+.header-ornament {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("/assets/icons/islamic-tile.svg");
+  background-size: 52px 52px;
+  background-repeat: repeat;
+  background-position: center top;
+  opacity: 0.38;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+}
+
+.site-header.is-scrolled .header-ornament {
+  opacity: 0.3;
 }
 
 .site-header.is-scrolled,
@@ -612,6 +635,8 @@ html[lang="ur"] label {
 }
 
 .site-header .wrap {
+  position: relative;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1081,7 +1106,10 @@ a.card {
   display: grid;
   place-items: center;
   color: var(--emerald);
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
   background: var(--card);
 }
 
@@ -1738,7 +1766,6 @@ html[dir="rtl"] .rev-quote {
   border: 1px solid rgba(201, 162, 39, 0.55);
   border-radius: var(--radius);
   background: var(--card);
-  position: relative;
 }
 
 .verse .arabic {
@@ -2257,14 +2284,136 @@ textarea.is-invalid,
   background: var(--emerald);
   color: var(--gold);
   font-size: 1.4rem;
+  overflow: visible;
+  animation: bot-fab-float 3.2s ease-in-out infinite;
+  transition: transform 0.28s var(--ease), box-shadow 0.28s, background 0.28s, color 0.28s;
+}
+
+.bot-fab-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  animation: bot-fab-twinkle 2.4s ease-in-out infinite;
+  transition: transform 0.28s var(--ease);
+}
+
+.bot-fab-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201, 162, 39, 0.55);
+  pointer-events: none;
+  animation: bot-fab-pulse 2.8s ease-out infinite;
+}
+
+.bot-fab-ring--delay {
+  animation-delay: 1.4s;
+}
+
+.bot-fab:hover,
+.bot-fab:focus-visible {
+  background: var(--emerald-deep, var(--emerald));
+  color: var(--gold-pale, var(--gold));
+  box-shadow: 0 14px 28px rgba(43, 36, 24, 0.28);
+  outline: none;
+  animation-play-state: paused;
+  transform: translateY(-3px) scale(1.06);
+}
+
+.bot-fab:hover .bot-fab-icon,
+.bot-fab:focus-visible .bot-fab-icon {
+  animation-play-state: paused;
+  transform: rotate(18deg) scale(1.08);
+}
+
+.bot-fab:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.bot-fab.is-open {
+  animation: none;
+  background: var(--espresso, #2b2418);
+  color: var(--ivory);
+  transform: none;
+}
+
+.bot-fab.is-open .bot-fab-icon {
+  animation: none;
+  font-size: 1.55rem;
+  font-weight: 400;
+}
+
+.bot-fab.is-open .bot-fab-ring {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes bot-fab-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes bot-fab-twinkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.08) rotate(-8deg);
+    opacity: 0.92;
+  }
+  70% {
+    transform: scale(0.96) rotate(6deg);
+    opacity: 1;
+  }
+}
+
+@keyframes bot-fab-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bot-fab,
+  .bot-fab-icon,
+  .bot-fab-ring {
+    animation: none !important;
+  }
+
+  .bot-fab:hover,
+  .bot-fab:focus-visible {
+    transform: scale(1.04);
+  }
 }
 
 .chat {
   position: fixed;
-  bottom: 92px;
-  inset-inline-end: 22px;
-  width: min(340px, calc(100vw - 2rem));
-  height: 430px;
+  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  inset-inline-end: max(0.75rem, env(safe-area-inset-right, 0px));
+  inset-inline-start: auto;
+  top: auto;
+  width: min(340px, calc(100vw - 1.5rem));
+  max-width: calc(100vw - 1.5rem);
+  height: min(430px, calc(100dvh - 7.25rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+  max-height: calc(100dvh - 7.25rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -2275,8 +2424,24 @@ textarea.is-invalid,
   overflow: hidden;
 }
 
+@supports not (height: 100dvh) {
+  .chat {
+    height: min(430px, calc(100vh - 7.25rem));
+    max-height: calc(100vh - 7.25rem);
+  }
+}
+
 .chat.open {
   display: flex;
+}
+
+@media (max-width: 420px) {
+  .chat {
+    inset-inline-end: 0.75rem;
+    inset-inline-start: 0.75rem;
+    width: auto;
+    max-width: none;
+  }
 }
 
 .chat-head {
@@ -2423,9 +2588,99 @@ textarea.is-invalid,
 
 /* Page banner */
 .page-hero {
-  padding: 3.2rem 0 2.4rem;
+  padding: clamp(2.6rem, 5.5vw, 3.8rem) 0 clamp(2.8rem, 5vw, 3.9rem);
   position: relative;
   overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 80% at 50% -10%, rgba(201, 162, 39, 0.2), transparent 52%),
+    radial-gradient(ellipse 50% 60% at 100% 100%, rgba(43, 36, 24, 0.05), transparent 45%),
+    linear-gradient(168deg, var(--sage) 0%, var(--ivory) 42%, #f4ebd6 100%);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.28);
+}
+
+.page-hero-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(201, 162, 39, 0.08) 50%, transparent 100%);
+  opacity: 0.9;
+}
+
+.page-hero-ornament {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("/assets/icons/islamic-tile.svg");
+  background-size: 76px 76px;
+  background-repeat: repeat;
+  background-position: center top;
+  opacity: 0.3;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 48%, transparent 92%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 48%, transparent 92%);
+}
+
+.page-hero::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.page-hero .wrap {
+  position: relative;
+  z-index: 1;
+}
+
+.page-hero .wrap:not(.teacher-hero) {
+  max-width: 44rem;
+  margin-inline: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page-hero .wrap:not(.teacher-hero) .kicker {
+  justify-content: center;
+}
+
+.page-hero .wrap:not(.teacher-hero) .star-div {
+  margin: 0.15rem 0 0.55rem;
+}
+
+.page-hero .wrap:not(.teacher-hero) .lede {
+  max-width: 36rem;
+  margin-inline: auto;
+  font-size: clamp(1.02rem, 1.6vw, 1.12rem);
+}
+
+.page-hero h1 {
+  font-size: clamp(2.35rem, 5.4vw, 3.55rem);
+  line-height: 1.12;
+  margin: 0.15rem 0 0.7rem;
+  color: var(--espresso);
+  letter-spacing: -0.02em;
+}
+
+.page-hero .pattern-corner {
+  width: min(220px, 42vw);
+  height: min(220px, 42vw);
+  opacity: 0.72;
+  z-index: 0;
+}
+
+.page-hero .teacher-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  text-align: start;
+  max-width: var(--max);
 }
 
 /* Timeline */
@@ -3351,8 +3606,155 @@ textarea.is-invalid,
   color: var(--muted);
 }
 
+/* Shared Islamic top ornament — all cards + special panels */
+.card,
+.auth-card,
+.rev-stage-card,
+.verse {
+  --ornament-fade: var(--card);
+  --ornament-opacity: 0.34;
+  --ornament-size: 64px;
+  --ornament-band: 5.75rem;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.prog-card {
+  --ornament-fade: var(--card);
+  --ornament-opacity: 0.3;
+  --ornament-size: 68px;
+  --ornament-band: 6.5rem;
+  isolation: isolate;
+}
+
+.card::before,
+.auth-card::before,
+.prog-card::before,
+.rev-stage-card::before,
+.verse::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: var(--ornament-band);
+  background-image: url("/assets/icons/islamic-tile.svg");
+  background-size: var(--ornament-size) var(--ornament-size);
+  background-repeat: repeat;
+  background-position: center top;
+  opacity: var(--ornament-opacity);
+  pointer-events: none;
+  z-index: 0;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 100%);
+}
+
+.card::after,
+.auth-card::after,
+.rev-stage-card::after,
+.verse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 1.8rem,
+    color-mix(in srgb, var(--ornament-fade) 72%, transparent) 3.5rem,
+    var(--ornament-fade) 5rem
+  );
+}
+
+.card > *,
+.auth-card > *,
+.prog-card > *,
+.rev-stage-card > *,
+.verse > * {
+  position: relative;
+  z-index: 1;
+}
+
+.mission-card {
+  --ornament-opacity: 0.38;
+  --ornament-size: 72px;
+  --ornament-band: 6.75rem;
+  padding-top: 1.35rem;
+}
+
+.mission-card-body {
+  position: relative;
+  z-index: 1;
+}
+
 .mission-card .kicker {
   margin-bottom: 0.45rem;
+}
+
+.mission-card--vision {
+  --ornament-opacity: 0.32;
+  --ornament-size: 68px;
+}
+
+.teacher-card {
+  --ornament-band: 6rem;
+  --ornament-opacity: 0.3;
+}
+
+.rev-stage-card {
+  --ornament-fade: var(--ivory);
+  --ornament-band: 7rem;
+  --ornament-opacity: 0.28;
+  --ornament-size: 70px;
+}
+
+.verse {
+  --ornament-band: 7.5rem;
+  --ornament-opacity: 0.32;
+  --ornament-size: 72px;
+}
+
+.auth-card {
+  --ornament-band: 6.5rem;
+  --ornament-opacity: 0.3;
+}
+
+.blog-card,
+.course {
+  --ornament-band: 5.25rem;
+}
+
+.prog-card--gold {
+  --ornament-fade: var(--gold);
+  --ornament-opacity: 0.26;
+}
+
+.prog-card--deep {
+  --ornament-fade: var(--emerald-deep);
+  --ornament-opacity: 0.42;
+}
+
+.prog-card--ivory {
+  --ornament-fade: var(--ivory);
+}
+
+.prog-card--sage {
+  --ornament-fade: var(--sage);
+  --ornament-opacity: 0.28;
+}
+
+.prog-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ornament-fade) 12%, transparent) 0%,
+    transparent 42%
+  );
 }
 
 #programs.section-emerald {

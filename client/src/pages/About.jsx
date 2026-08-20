@@ -1,18 +1,12 @@
 import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import PageHero from "../components/PageHero";
 
 export default function About() {
   const { t } = useApp();
   return (
     <main>
-      <section className="page-hero">
-        <div className="pattern-corner tl" />
-        <div className="wrap">
-          <p className="kicker">{t.aboutKicker}</p>
-          <h1>{t.aboutTitle}</h1>
-          <p className="lede">{t.aboutLede}</p>
-        </div>
-      </section>
+      <PageHero kicker={t.aboutKicker} title={t.aboutTitle} lede={t.aboutLede} />
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap grid-2">
           <article className="card"><h2>{t.mission}</h2><p>{t.missionP}</p></article>

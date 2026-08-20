@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { api, SITE } from "../api";
+import PageHero from "../components/PageHero";
 
 export default function Contact() {
   const { t, showToast } = useApp();
@@ -32,14 +33,7 @@ export default function Contact() {
 
   return (
     <main>
-      <section className="page-hero">
-        <div className="pattern-corner tl" />
-        <div className="wrap">
-          <p className="kicker">{t.contactKicker}</p>
-          <h1>{t.contactTitle}</h1>
-          <p className="lede">{t.contactLede}</p>
-        </div>
-      </section>
+      <PageHero kicker={t.contactKicker} title={t.contactTitle} lede={t.contactLede} />
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap contact-grid">
           <article className="card">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { SITE } from "../api";
 
@@ -6,10 +6,30 @@ export default function Chatbot({ open, onClose, onOpen }) {
   const { t, lang } = useApp();
   const [msgs, setMsgs] = useState([{ who: "bot", text: t.chatHello }]);
   const [q, setQ] = useState("");
+  const rootRef = useRef(null);
 
   const quick = lang === "ur"
     ? ["کورسز", "فیس", "مفت ٹرائل", "بچے", "داخلہ", "انسان سے بات"]
     : ["Courses", "Fees", "Free trial", "Kids vs adults", "How to join", "Talk to a human"];
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onPointerDown(e) {
+      if (rootRef.current && !rootRef.current.contains(e.target)) onClose();
+    }
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") onClose();
+    }
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
 
   function reply(raw) {
     const s = raw.toLowerCase();
@@ -34,9 +54,19 @@ export default function Chatbot({ open, onClose, onOpen }) {
   }
 
   return (
-    <>
-      <button className="bot-fab" type="button" onClick={onOpen} aria-label="Open chat">✦</button>
-      <div className={`chat${open ? " open" : ""}`}>
+    <div className="chatbot-root" ref={rootRef}>
+      <button
+        className={`bot-fab${open ? " is-open" : ""}`}
+        type="button"
+        onClick={onOpen}
+        aria-label={open ? "Close chat" : "Open chat"}
+        aria-expanded={open}
+      >
+        <span className="bot-fab-ring" aria-hidden="true" />
+        <span className="bot-fab-ring bot-fab-ring--delay" aria-hidden="true" />
+        <span className="bot-fab-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
+      </button>
+      <div className={`chat${open ? " open" : ""}`} role="dialog" aria-modal="true" aria-hidden={!open}>
         <div className="chat-head">
           <strong>{t.chatTitle}</strong>
           <button type="button" onClick={onClose} aria-label="Close">×</button>
@@ -54,6 +84,6 @@ export default function Chatbot({ open, onClose, onOpen }) {
           <button type="submit">{lang === "ur" ? "بھیجیں" : "Send"}</button>
         </form>
       </div>
-    </>
+    </div>
   );
 }

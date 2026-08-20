@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
 import { localized } from "../helpers";
+import PageHero from "../components/PageHero";
 
 export default function Blog() {
   const { t, lang } = useApp();
@@ -14,14 +15,7 @@ export default function Blog() {
 
   return (
     <main>
-      <section className="page-hero">
-        <div className="pattern-corner tl" />
-        <div className="wrap">
-          <p className="kicker">{t.blogKicker}</p>
-          <h1>{t.blogTitle}</h1>
-          <p className="lede">{t.blogLede}</p>
-        </div>
-      </section>
+      <PageHero kicker={t.blogKicker} title={t.blogTitle} lede={t.blogLede} />
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap grid-3">
           {posts.map((row) => {

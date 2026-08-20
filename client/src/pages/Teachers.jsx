@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
 import TeacherCard from "../components/TeacherCard";
+import PageHero from "../components/PageHero";
 
 export default function Teachers() {
   const { t } = useApp();
@@ -13,14 +14,7 @@ export default function Teachers() {
 
   return (
     <main>
-      <section className="page-hero">
-        <div className="pattern-corner tl" />
-        <div className="wrap">
-          <p className="kicker">{t.teachKicker}</p>
-          <h1>{t.teachersPage}</h1>
-          <p className="lede">{t.teachersLede}</p>
-        </div>
-      </section>
+      <PageHero kicker={t.teachKicker} title={t.teachersPage} lede={t.teachersLede} />
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap grid-3">
           {teachers.length

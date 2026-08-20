@@ -83,14 +83,18 @@ export default function Home() {
           </div>
           <div className="grid-2 mission-grid">
             <article className="card mission-card">
-              <p className="kicker">{t.mission}</p>
-              <h3>{t.mission}</h3>
-              <p>{t.missionP}</p>
+              <div className="mission-card-body">
+                <p className="kicker">{t.mission}</p>
+                <h3>{t.mission}</h3>
+                <p>{t.missionP}</p>
+              </div>
             </article>
-            <article className="card mission-card">
-              <p className="kicker">{t.homeVisionTitle}</p>
-              <h3>{t.homeVisionTitle}</h3>
-              <p>{t.homeVisionP}</p>
+            <article className="card mission-card mission-card--vision">
+              <div className="mission-card-body">
+                <p className="kicker">{t.homeVisionTitle}</p>
+                <h3>{t.homeVisionTitle}</h3>
+                <p>{t.homeVisionP}</p>
+              </div>
             </article>
           </div>
         </div>

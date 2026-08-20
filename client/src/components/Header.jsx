@@ -43,6 +43,7 @@ export default function Header() {
         setMy(e.clientY - box.top + "px");
       }}
     >
+      <span className="header-ornament" aria-hidden="true" />
       <div className="wrap">
         <Link className="brand" to="/">
           <img src="/assets/icons/logo.svg" alt="" />
