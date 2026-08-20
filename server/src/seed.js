@@ -31,7 +31,7 @@ async function seed() {
       ('student','Fatima Khan','fatima@quranacademy.example',$1,'Student on Tajweed for Kids.','active'),
       ('teacher','Ustadha Amina','amina@quranacademy.example',$1,'Ijazah in Hafs. Kids Tajweed.','active'),
       ('teacher','Qari Yusuf','yusuf@quranacademy.example',$1,'Hifz track for adults.','active'),
-      ('teacher','Qari Hassan','hassan@quranacademy.example',$1,'Hifz · Adults.','pending'),
+      ('teacher','Qari Hassan','hassan@quranacademy.example',$1,'Hifz · Adults.','active'),
       ('admin','Academy Admin','admin@quranacademy.example',$1,'Academy staff.','active')
      ON CONFLICT (email) DO UPDATE SET name=EXCLUDED.name, status=EXCLUDED.status, bio=EXCLUDED.bio, password_hash=EXCLUDED.password_hash`,
     [hash]

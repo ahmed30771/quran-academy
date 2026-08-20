@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
-import { localized, startCourseTrial } from "../helpers";
+import { localized } from "../helpers";
 import TeacherCard from "../components/TeacherCard";
 import ProgramDeck from "../components/ProgramDeck";
 import TutorialProcess from "../components/TutorialProcess";
@@ -33,10 +33,12 @@ export default function Home() {
   }, [user]);
 
   async function bookTrial(courseId) {
-    setTrialBusy(courseId);
-    const res = await startCourseTrial({ nav, user, showToast, t, courseId });
-    if (res?.ok) setTrialIds((ids) => (ids.includes(courseId) ? ids : [...ids, courseId]));
-    setTrialBusy("");
+    if (!user) return nav("/login", { state: { from: `/courses/${courseId}` } });
+    if (user.role !== "student") {
+      showToast(t.onlyStudentTrial);
+      return;
+    }
+    nav(`/courses/${courseId}#choose-teacher`);
   }
   const m = (n) => formatMoney(n, currency);
   const faqs = [

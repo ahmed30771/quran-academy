@@ -43,7 +43,7 @@ export default function TeacherProfile() {
           </div>
         </div>
       </PageHero>
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section">
         <div className="wrap">
           <div className="grid-2">
             {view.experience ? (

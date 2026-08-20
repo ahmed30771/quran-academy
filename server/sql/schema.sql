@@ -51,9 +51,11 @@ CREATE TABLE IF NOT EXISTS enrollments (
   course_id VARCHAR(64) NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   plan VARCHAR(64) NOT NULL DEFAULT 'standard',
   status VARCHAR(32) NOT NULL DEFAULT 'pending',
+  teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, course_id)
 );
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
 
 CREATE TABLE IF NOT EXISTS contact_messages (
   id SERIAL PRIMARY KEY,
@@ -271,5 +273,17 @@ CREATE TABLE IF NOT EXISTS teacher_courses (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (teacher_id, course_id)
 );
+
+CREATE TABLE IF NOT EXISTS teacher_ratings (
+  id SERIAL PRIMARY KEY,
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  teacher_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  stars SMALLINT NOT NULL CHECK (stars BETWEEN 1 AND 5),
+  comment TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (student_id, teacher_id)
+);
+CREATE INDEX IF NOT EXISTS teacher_ratings_teacher_idx ON teacher_ratings (teacher_id);
 
 

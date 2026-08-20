@@ -302,7 +302,7 @@ export function dashPath(user) {
   return "/student/dashboard";
 }
 
-export async function startCourseTrial({ nav, user, showToast, t, courseId }) {
+export async function startCourseTrial({ nav, user, showToast, t, courseId, teacherId }) {
   if (!user) {
     nav("/login", { state: { from: `/courses/${courseId}` } });
     return null;
@@ -312,7 +312,12 @@ export async function startCourseTrial({ nav, user, showToast, t, courseId }) {
     return null;
   }
   try {
-    const res = await api(`/api/courses/${encodeURIComponent(courseId)}/trial`, { method: "POST" });
+    const body = {};
+    if (teacherId) body.teacherId = teacherId;
+    const res = await api(`/api/courses/${encodeURIComponent(courseId)}/trial`, {
+      method: "POST",
+      body,
+    });
     showToast(t.toastTrial);
     return res;
   } catch (err) {

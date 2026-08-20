@@ -18,6 +18,7 @@ import progressRoutes from "./routes/progress.js";
 import assignmentRoutes from "./routes/assignments.js";
 import notificationRoutes from "./routes/notifications.js";
 import reviewRoutes from "./routes/reviews.js";
+import ratingRoutes from "./routes/ratings.js";
 
 dotenv.config();
 
@@ -96,6 +97,7 @@ api.get("/health", async (_req, res) => {
 });
 
 api.use("/reviews", reviewRoutes);
+api.use("/ratings", ratingRoutes);
 api.get("/teachers", async (_req, res) => {
   try {
     const rows = await query(

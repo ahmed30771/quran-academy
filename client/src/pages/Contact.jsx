@@ -34,7 +34,7 @@ export default function Contact() {
   return (
     <main>
       <PageHero kicker={t.contactKicker} title={t.contactTitle} lede={t.contactLede} />
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section">
         <div className="wrap contact-grid">
           <article className="card">
             <form className="form" onSubmit={onSubmit}>

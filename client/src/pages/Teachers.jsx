@@ -15,7 +15,7 @@ export default function Teachers() {
   return (
     <main>
       <PageHero kicker={t.teachKicker} title={t.teachersPage} lede={t.teachersLede} />
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section">
         <div className="wrap grid-3">
           {teachers.length
             ? teachers.map((p) => <TeacherCard key={p.id} teacher={p} t={t} />)

@@ -408,16 +408,17 @@ export default function AdminDash() {
         <article className="card" id="enroll">
           <h3>{t.recentEnroll}</h3>
           <table className="table">
-            <thead><tr><th>{t.thName}</th><th>{t.thCourse}</th><th>{t.thPlan}</th><th>{t.thStatus}</th></tr></thead>
+            <thead><tr><th>{t.thName}</th><th>{t.thCourse}</th><th>{t.thTeacher}</th><th>{t.thPlan}</th><th>{t.thStatus}</th></tr></thead>
             <tbody>
               {data.enrollments.length ? data.enrollments.map((e) => (
                 <tr key={e.id}>
                   <td>{e.student}</td>
                   <td>{e.course}</td>
+                  <td>{e.teacher || "—"}</td>
                   <td>{e.plan}</td>
                   <td>{e.status}</td>
                 </tr>
-              )) : <tr><td colSpan={4}>No enrollments yet.</td></tr>}
+              )) : <tr><td colSpan={5}>No enrollments yet.</td></tr>}
             </tbody>
           </table>
         </article>

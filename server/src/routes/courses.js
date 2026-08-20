@@ -17,6 +17,37 @@ function findCourse(id) {
   return queryOne("SELECT * FROM courses WHERE id=$1 OR slug=$1", [id]);
 }
 
+async function approvedTeacherForCourse(courseId, teacherId) {
+  if (!teacherId) return null;
+  return queryOne(
+    `SELECT u.id, u.name
+     FROM teacher_courses tc
+     JOIN users u ON u.id = tc.teacher_id
+     WHERE tc.course_id = $1
+       AND tc.teacher_id = $2
+       AND tc.status = 'approved'
+       AND u.role = 'teacher'
+       AND u.status = 'active'`,
+    [courseId, teacherId]
+  );
+}
+
+async function ensureStudentClass(courseId, teacherId, studentId) {
+  const existing = await queryOne(
+    `SELECT id FROM classes
+     WHERE course_id=$1 AND teacher_id=$2 AND student_id=$3
+     LIMIT 1`,
+    [courseId, teacherId, studentId]
+  );
+  if (existing) return existing;
+  return queryOne(
+    `INSERT INTO classes (course_id, teacher_id, student_id, day_label, time_label, status)
+     VALUES ($1,$2,$3,'To schedule','TBD','upcoming')
+     RETURNING id`,
+    [courseId, teacherId, studentId]
+  );
+}
+
 router.get("/", optionalAuth, async (req, res) => {
   try {
     const all = req.query.all === "1";
@@ -88,7 +119,8 @@ router.get("/:id/teachers", async (req, res) => {
     const course = await findCourse(req.params.id);
     if (!course) return res.status(404).json({ error: "Course not found." });
     const teachers = await query(
-      `SELECT u.id, u.name, u.bio, u.avatar, u.gender, u.teaching_languages, u.teach_kids, u.teach_adults, u.experience, u.introduction, u.locale_ur
+      `SELECT u.id, u.name, u.bio, u.avatar, u.gender, u.teaching_languages, u.teach_kids, u.teach_adults,
+              u.experience, u.introduction, u.locale_ur, COALESCE(u.rating, 5) AS rating
        FROM teacher_courses tc
        JOIN users u ON u.id=tc.teacher_id
        WHERE tc.course_id=$1 AND tc.status='approved' AND u.role='teacher' AND u.status='active'
@@ -104,26 +136,57 @@ router.get("/:id/teachers", async (req, res) => {
 router.post("/:id/enroll", authRequired, requireRole("student"), async (req, res) => {
   try {
     const plan = req.body?.plan || "standard";
+    const teacherId = Number(req.body?.teacherId);
     const course = await findCourse(req.params.id);
     if (!course || course.status !== "active") return res.status(404).json({ error: "Course not found." });
+
+    const teacherCount = await queryOne(
+      `SELECT COUNT(*)::int AS n
+       FROM teacher_courses tc
+       JOIN users u ON u.id = tc.teacher_id
+       WHERE tc.course_id = $1 AND tc.status = 'approved' AND u.status = 'active'`,
+      [course.id]
+    );
+    let teacher = null;
+    if (teacherCount?.n > 0) {
+      if (!Number.isFinite(teacherId)) {
+        return res.status(400).json({ error: "Please choose a teacher for this course." });
+      }
+      teacher = await approvedTeacherForCourse(course.id, teacherId);
+      if (!teacher) return res.status(400).json({ error: "That teacher is not available for this course." });
+    }
+
     const exists = await queryOne(
-      "SELECT id FROM enrollments WHERE user_id=$1 AND course_id=$2",
+      "SELECT id, teacher_id FROM enrollments WHERE user_id=$1 AND course_id=$2",
       [req.user.id, course.id]
     );
-    if (exists) return res.json({ ok: true, already: true });
+    if (exists) {
+      if (teacher && Number(exists.teacher_id) !== Number(teacher.id)) {
+        await query("UPDATE enrollments SET teacher_id=$1 WHERE id=$2", [teacher.id, exists.id]);
+        await ensureStudentClass(course.id, teacher.id, req.user.id);
+        return res.json({ ok: true, already: true, updatedTeacher: true, course, teacher });
+      }
+      return res.json({ ok: true, already: true, course, teacher });
+    }
+
     await queryOne(
-      `INSERT INTO enrollments (user_id, course_id, plan, status)
-       VALUES ($1,$2,$3,'pending') RETURNING id`,
-      [req.user.id, course.id, plan]
+      `INSERT INTO enrollments (user_id, course_id, plan, status, teacher_id)
+       VALUES ($1,$2,$3,'pending',$4) RETURNING id`,
+      [req.user.id, course.id, plan, teacher?.id || null]
     );
+    if (teacher) await ensureStudentClass(course.id, teacher.id, req.user.id);
+
     const admin = await queryOne("SELECT id FROM users WHERE role='admin' LIMIT 1");
     if (admin) {
+      const note = teacher
+        ? `New enrollment for ${course.title} with ${teacher.name}.`
+        : `New enrollment for ${course.title}.`;
       await queryOne(
         "INSERT INTO notifications (user_id, text) VALUES ($1,$2) RETURNING id",
-        [admin.id, `New enrollment for ${course.title}.`]
+        [admin.id, note]
       );
     }
-    res.json({ ok: true, course });
+    res.json({ ok: true, course, teacher });
   } catch (err) {
     fail(res, err, "Could not enroll in this course.");
   }
@@ -131,8 +194,26 @@ router.post("/:id/enroll", authRequired, requireRole("student"), async (req, res
 
 router.post("/:id/trial", authRequired, requireRole("student"), async (req, res) => {
   try {
+    const teacherId = Number(req.body?.teacherId);
     const course = await findCourse(req.params.id);
     if (!course || course.status !== "active") return res.status(404).json({ error: "Course not found." });
+
+    const teacherCount = await queryOne(
+      `SELECT COUNT(*)::int AS n
+       FROM teacher_courses tc
+       JOIN users u ON u.id = tc.teacher_id
+       WHERE tc.course_id = $1 AND tc.status = 'approved' AND u.status = 'active'`,
+      [course.id]
+    );
+    let teacher = null;
+    if (teacherCount?.n > 0) {
+      if (!Number.isFinite(teacherId)) {
+        return res.status(400).json({ error: "Please choose a teacher for this course." });
+      }
+      teacher = await approvedTeacherForCourse(course.id, teacherId);
+      if (!teacher) return res.status(400).json({ error: "That teacher is not available for this course." });
+    }
+
     const used = await queryOne("SELECT course_id FROM course_trials WHERE user_id=$1 AND course_id=$2", [req.user.id, course.id]);
     if (used) {
       return res.status(409).json({ error: "You have already used the free trial for this course." });
@@ -143,25 +224,32 @@ router.post("/:id/trial", authRequired, requireRole("student"), async (req, res)
       [req.user.id, course.id]
     );
     const existing = await queryOne(
-      "SELECT id FROM enrollments WHERE user_id=$1 AND course_id=$2",
+      "SELECT id, teacher_id FROM enrollments WHERE user_id=$1 AND course_id=$2",
       [req.user.id, course.id]
     );
     if (!existing) {
       await query(
-        `INSERT INTO enrollments (user_id, course_id, plan, status)
-         VALUES ($1,$2,'trial','active')`,
-        [req.user.id, course.id]
+        `INSERT INTO enrollments (user_id, course_id, plan, status, teacher_id)
+         VALUES ($1,$2,'trial','active',$3)`,
+        [req.user.id, course.id, teacher?.id || null]
       );
+    } else if (teacher && !existing.teacher_id) {
+      await query("UPDATE enrollments SET teacher_id=$1 WHERE id=$2", [teacher.id, existing.id]);
     }
+    if (teacher) await ensureStudentClass(course.id, teacher.id, req.user.id);
+
     const admin = await queryOne("SELECT id FROM users WHERE role='admin' LIMIT 1");
     if (admin) {
       const student = await queryOne("SELECT name FROM users WHERE id=$1", [req.user.id]);
+      const note = teacher
+        ? `One-day free trial: ${student?.name || "Student"} on ${course.title} with ${teacher.name}.`
+        : `One-day free trial: ${student?.name || "Student"} on ${course.title}.`;
       await query(
         "INSERT INTO notifications (user_id, text) VALUES ($1,$2)",
-        [admin.id, `One-day free trial: ${student?.name || "Student"} on ${course.title}.`]
+        [admin.id, note]
       );
     }
-    res.json({ ok: true, trial, course });
+    res.json({ ok: true, trial, course, teacher });
   } catch (err) {
     if (err?.code === "23505") {
       return res.status(409).json({ error: "You have already used the free trial for this course." });

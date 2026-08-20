@@ -1,23 +1,30 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
-import { audienceLabel, categoryLabel, initials, langLabel, levelLabel, localized, startCourseTrial } from "../helpers";
+import { audienceLabel, categoryLabel, coursePath, initials, langLabel, levelLabel, localized, startCourseTrial, starLine } from "../helpers";
 import PageHero from "../components/PageHero";
 
 export default function CourseDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const { t, lang, currency, user, showToast } = useApp();
   const nav = useNavigate();
   const [course, setCourse] = useState(null);
   const [teachers, setTeachers] = useState([]);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [busy, setBusy] = useState(false);
   const [trialBusy, setTrialBusy] = useState(false);
   const [trialUsed, setTrialUsed] = useState(false);
 
   useEffect(() => {
     api(`/api/courses/${id}`).then(setCourse).catch(() => setCourse(null));
-    api(`/api/courses/${id}/teachers`).then(setTeachers).catch(() => setTeachers([]));
+    api(`/api/courses/${id}/teachers`)
+      .then((rows) => {
+        setTeachers(rows || []);
+        if (rows?.length === 1) setSelectedTeacher(rows[0].id);
+      })
+      .catch(() => setTeachers([]));
   }, [id]);
 
   useEffect(() => {
@@ -30,23 +37,58 @@ export default function CourseDetail() {
       .catch(() => setTrialUsed(false));
   }, [user, id, course?.id]);
 
+  useEffect(() => {
+    if (location.hash === "#choose-teacher") {
+      document.getElementById("choose-teacher")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [location.hash, teachers.length]);
+
+  function needTeacher() {
+    if (!teachers.length) return false;
+    if (!selectedTeacher) {
+      showToast(t.pickTeacherFirst);
+      document.getElementById("choose-teacher")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return true;
+    }
+    return false;
+  }
+
   async function bookTrial() {
+    if (needTeacher()) return;
     setTrialBusy(true);
-    const res = await startCourseTrial({ nav, user, showToast, t, courseId: course.id });
+    const res = await startCourseTrial({
+      nav,
+      user,
+      showToast,
+      t,
+      courseId: course.id,
+      teacherId: selectedTeacher,
+    });
     if (res?.ok) setTrialUsed(true);
     setTrialBusy(false);
   }
 
   async function enroll() {
-    if (!user) return nav("/login");
+    if (!user) return nav("/login", { state: { from: coursePath(course) } });
     if (user.role !== "student") {
       showToast("Only student accounts can enroll.");
       return;
     }
+    if (needTeacher()) return;
     try {
       setBusy(true);
-      const res = await api(`/api/courses/${course.id}/enroll`, { method: "POST", body: { plan: "standard" } });
-      showToast(res.already ? "You are already enrolled in this course." : `Enrollment request sent for ${course.title}.`);
+      const res = await api(`/api/courses/${course.id}/enroll`, {
+        method: "POST",
+        body: { plan: "standard", teacherId: selectedTeacher || undefined },
+      });
+      if (res.already && res.updatedTeacher) {
+        showToast(t.toastTeacherUpdated);
+      } else if (res.already) {
+        showToast(t.alreadyEnrolled);
+      } else {
+        const name = res.teacher?.name ? ` · ${res.teacher.name}` : "";
+        showToast(`${t.enrollSent}${name}`);
+      }
     } catch (e) {
       showToast(e.message);
     } finally {
@@ -69,7 +111,7 @@ export default function CourseDetail() {
   return (
     <main>
       <PageHero kicker={t.courseKicker} title={view.title} lede={view.intro || view.blurb} />
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section">
         <div className="wrap course-detail">
           <div className="course-cover course-cover-lg">
             {view.image_url ? <img src={view.image_url} alt="" /> : <span>{t.courseImageSoon}</span>}
@@ -105,29 +147,48 @@ export default function CourseDetail() {
             <h3>{t.courseReqs}</h3>
             <p>{view.requirements || "—"}</p>
           </article>
-          <p className="trial-note">{t.firstDayTrial}</p>
+
+          <div className="section-head" id="choose-teacher" style={{ marginTop: "2.4rem" }}>
+            <p className="kicker">{t.teachKicker}</p>
+            <h2>{t.chooseTeacherTitle}</h2>
+            <p className="lede">{t.chooseTeacherLede}</p>
+          </div>
+          <div className="grid-3 teacher-pick-grid">
+            {teachers.length ? teachers.map((p) => {
+              const tv = localized(p, lang);
+              const on = selectedTeacher === p.id;
+              return (
+                <article
+                  key={p.id}
+                  className={`card teacher-card teacher-pick${on ? " is-selected" : ""}`}
+                >
+                  <button
+                    type="button"
+                    className="teacher-pick-select"
+                    onClick={() => setSelectedTeacher(p.id)}
+                    aria-pressed={on}
+                  >
+                    <div className="avatar">{p.avatar ? <img src={p.avatar} alt="" /> : initials(p.name)}</div>
+                    <h3>{tv.name}</h3>
+                    <p className="stars" aria-label={`${p.rating || 5} stars`}>{starLine(p.rating || 5)}</p>
+                    <p>{langLabel(p.teaching_languages, t)}</p>
+                    <span className="teacher-pick-mark">{on ? t.teacherSelected : t.selectTeacher}</span>
+                  </button>
+                  <Link className="teacher-pick-profile" to={`/teachers/${p.id}`}>
+                    {t.viewProfile}
+                  </Link>
+                </article>
+              );
+            }) : <p className="lede">{t.courseTeachersEmpty}</p>}
+          </div>
+
+          <p className="trial-note" style={{ marginTop: "1.4rem" }}>{t.firstDayTrial}</p>
           <div className="btn-row">
             <button className="btn btn-gold" type="button" disabled={trialUsed || trialBusy} onClick={bookTrial}>
               {trialUsed ? t.trialUsed : trialBusy ? "..." : t.bookTrial}
             </button>
             <button className="btn btn-primary" type="button" disabled={busy} onClick={enroll}>{busy ? "..." : t.enroll}</button>
             <Link className="btn btn-ghost" to="/courses">{t.courses}</Link>
-          </div>
-          <div className="section-head" style={{ marginTop: "2.4rem" }}>
-            <p className="kicker">{t.teachKicker}</p>
-            <h2>{t.teachersForCourse}</h2>
-          </div>
-          <div className="grid-3">
-            {teachers.length ? teachers.map((p) => {
-              const view = localized(p, lang);
-              return (
-              <Link className="card teacher-card" to={`/teachers/${p.id}`} key={p.id}>
-                <div className="avatar">{p.avatar ? <img src={p.avatar} alt="" /> : initials(p.name)}</div>
-                <h3>{view.name}</h3>
-                <p>{langLabel(p.teaching_languages, t)}</p>
-              </Link>
-              );
-            }) : <p className="lede">{t.courseTeachersEmpty}</p>}
           </div>
         </div>
       </section>

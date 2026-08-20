@@ -57,6 +57,7 @@ export async function ensureCourseSchema() {
   await query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL");
   await query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()");
   await query("CREATE UNIQUE INDEX IF NOT EXISTS reviews_user_id_uq ON reviews (user_id) WHERE user_id IS NOT NULL");
+  await query("ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL");
   await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS locale_ur JSONB");
   await query("UPDATE courses SET slug = id WHERE slug IS NULL OR slug = ''");
   await query("CREATE UNIQUE INDEX IF NOT EXISTS courses_slug_idx ON courses (slug)");
@@ -91,6 +92,20 @@ export async function ensureCourseSchema() {
     )
   `);
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS teacher_ratings (
+      id SERIAL PRIMARY KEY,
+      student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      teacher_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      stars SMALLINT NOT NULL CHECK (stars BETWEEN 1 AND 5),
+      comment TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (student_id, teacher_id)
+    )
+  `);
+  await query("CREATE INDEX IF NOT EXISTS teacher_ratings_teacher_idx ON teacher_ratings (teacher_id)");
+
   const seeded = await queryOne("SELECT key FROM settings WHERE key='demo_catalog'");
   if (!seeded) {
     const courseCount = await queryOne("SELECT COUNT(*)::int AS n FROM courses");
@@ -119,6 +134,17 @@ export async function ensureCourseSchema() {
   }
 
   await ensureAdminAccounts();
+  await query(
+    `UPDATE users
+     SET status='active'
+     WHERE role='teacher'
+       AND status='pending'
+       AND email IN (
+         'amina@quranacademy.example',
+         'yusuf@quranacademy.example',
+         'hassan@quranacademy.example'
+       )`
+  );
 }
 
 let ready;

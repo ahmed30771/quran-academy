@@ -35,7 +35,11 @@ router.get("/student", authRequired, requireRole("student"), async (req, res) =>
     [req.user.id]
   );
   const enrollments = await query(
-    `SELECT e.*, co.title FROM enrollments e JOIN courses co ON co.id=e.course_id WHERE e.user_id=$1`,
+    `SELECT e.*, co.title, t.name AS teacher_name, t.id AS teacher_id
+     FROM enrollments e
+     JOIN courses co ON co.id=e.course_id
+     LEFT JOIN users t ON t.id=e.teacher_id
+     WHERE e.user_id=$1`,
     [req.user.id]
   );
   const trials = await query(
@@ -141,8 +145,11 @@ router.get("/admin", authRequired, requireRole("admin"), async (_req, res) => {
   const teachers = await queryOne("SELECT COUNT(*)::int AS n FROM users WHERE role='teacher'");
   const classes = await queryOne("SELECT COUNT(*)::int AS n FROM classes");
   const enrollments = await query(
-    `SELECT e.id, e.plan, e.status, e.created_at, u.name AS student, co.title AS course
-     FROM enrollments e JOIN users u ON u.id=e.user_id JOIN courses co ON co.id=e.course_id
+    `SELECT e.id, e.plan, e.status, e.created_at, u.name AS student, co.title AS course, t.name AS teacher
+     FROM enrollments e
+     JOIN users u ON u.id=e.user_id
+     JOIN courses co ON co.id=e.course_id
+     LEFT JOIN users t ON t.id=e.teacher_id
      ORDER BY e.created_at DESC LIMIT 20`
   );
   const inbox = await query("SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 10");

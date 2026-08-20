@@ -7,7 +7,7 @@ export default function About() {
   return (
     <main>
       <PageHero kicker={t.aboutKicker} title={t.aboutTitle} lede={t.aboutLede} />
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section">
         <div className="wrap grid-2">
           <article className="card"><h2>{t.mission}</h2><p>{t.missionP}</p></article>
           <article className="card"><h2>{t.howTeach}</h2><p>{t.howTeachP}</p></article>

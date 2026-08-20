@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import DashShell from "../components/DashShell";
 import { useApp } from "../context/AppContext";
 import { api, SITE } from "../api";
-import { starLine } from "../helpers";
+import { initials, starLine } from "../helpers";
 
 export default function StudentDash() {
   const { t, showToast, user } = useApp();
@@ -16,10 +16,13 @@ export default function StudentDash() {
   const [text, setText] = useState("");
   const [reviewBusy, setReviewBusy] = useState(false);
   const [reviewErr, setReviewErr] = useState("");
+  const [rateTeachers, setRateTeachers] = useState([]);
+  const [rateForm, setRateForm] = useState({});
+  const [rateBusyId, setRateBusyId] = useState("");
 
   useEffect(() => {
     const tab = String(location.hash || "").replace(/^#/, "");
-    if (tab === "review") setActive("review");
+    if (tab === "review" || tab === "rate-teacher") setActive(tab === "rate-teacher" ? "rateTeacher" : "review");
   }, [location.hash]);
 
   useEffect(() => {
@@ -38,6 +41,23 @@ export default function StudentDash() {
         }
       })
       .catch(() => {});
+  }, [active]);
+
+  useEffect(() => {
+    if (active !== "rateTeacher") return;
+    api("/api/ratings/teachers")
+      .then((rows) => {
+        setRateTeachers(rows || []);
+        const next = {};
+        for (const row of rows || []) {
+          next[row.id] = {
+            stars: row.myStars || 5,
+            comment: row.myComment || "",
+          };
+        }
+        setRateForm(next);
+      })
+      .catch(() => setRateTeachers([]));
   }, [active]);
 
   const next = data.classes[0];
@@ -62,6 +82,29 @@ export default function StudentDash() {
       showToast(err.message || t.errReviewSave);
     } finally {
       setReviewBusy(false);
+    }
+  }
+
+  async function saveTeacherRating(teacherId) {
+    const form = rateForm[teacherId] || { stars: 5, comment: "" };
+    setRateBusyId(teacherId);
+    try {
+      const saved = await api(`/api/ratings/teachers/${teacherId}`, {
+        method: "POST",
+        body: { stars: form.stars, comment: form.comment },
+      });
+      setRateTeachers((list) =>
+        list.map((row) =>
+          row.id === teacherId
+            ? { ...row, myStars: saved.stars, myComment: saved.comment, rating: saved.rating }
+            : row
+        )
+      );
+      showToast(t.toastTeacherRated);
+    } catch (err) {
+      showToast(err.message || t.errReviewSave);
+    } finally {
+      setRateBusyId("");
     }
   }
 
@@ -204,6 +247,94 @@ export default function StudentDash() {
         </form>
       </article>
     ),
+    rateTeacher: (
+      <div className="rate-teacher" id="rate-teacher">
+        <article className="card">
+          <p className="kicker">{t.rateTeacherKicker}</p>
+          <h3>{t.rateTeacherTitle}</h3>
+          <p>{t.rateTeacherLede}</p>
+        </article>
+        {rateTeachers.length ? (
+          <div className="rate-teacher-grid">
+            {rateTeachers.map((row) => {
+              const form = rateForm[row.id] || { stars: 5, comment: "" };
+              const rated = row.myStars != null;
+              return (
+                <article className="card rate-teacher-card" key={row.id}>
+                  <div className="rate-teacher-head">
+                    <div className="avatar dash-avatar">
+                      {row.avatar ? <img src={row.avatar} alt="" /> : initials(row.name)}
+                    </div>
+                    <div>
+                      <h4>{row.name}</h4>
+                      <p className="stars" aria-label={`${row.rating} stars`}>{starLine(row.rating)}</p>
+                      <p className="rate-teacher-meta">{t.yourAvgRating}: {Number(row.rating).toFixed(1)}</p>
+                      {rated ? <p className="rate-teacher-meta">{t.youRated}: {starLine(row.myStars)}</p> : null}
+                    </div>
+                  </div>
+                  <fieldset className="star-pick">
+                    <legend>{t.yourRating}</legend>
+                    <div className="star-pick-row" role="radiogroup" aria-label={t.yourRating}>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={form.stars === n}
+                          className={`star-pick-btn${form.stars >= n ? " is-on" : ""}`}
+                          onClick={() =>
+                            setRateForm((prev) => ({
+                              ...prev,
+                              [row.id]: { ...form, stars: n },
+                            }))
+                          }
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <label>
+                    {t.rateTeacherComment}
+                    <textarea
+                      value={form.comment}
+                      onChange={(e) =>
+                        setRateForm((prev) => ({
+                          ...prev,
+                          [row.id]: { ...form, comment: e.target.value },
+                        }))
+                      }
+                      placeholder={t.phRateComment}
+                      maxLength={400}
+                      rows={3}
+                    />
+                  </label>
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    disabled={rateBusyId === row.id}
+                    onClick={() => saveTeacherRating(row.id)}
+                  >
+                    {rateBusyId === row.id
+                      ? t.saving
+                      : rated
+                        ? t.updateTeacherRating
+                        : t.submitTeacherRating}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <article className="card">
+            <p>{t.rateTeacherEmpty}</p>
+            <div className="btn-row" style={{ marginTop: "0.8rem" }}>
+              <Link className="btn btn-ghost" to="/courses">{t.browseCourses}</Link>
+            </div>
+          </article>
+        )}
+      </div>
+    ),
   };
 
   return (
@@ -218,6 +349,7 @@ export default function StudentDash() {
         { key: "homework", label: t.homework },
         { key: "certificate", label: t.certificate },
         { key: "review", label: t.navReview },
+        { key: "rateTeacher", label: t.navRateTeacher },
         { to: "/courses", label: t.browseCourses },
       ]}
     >

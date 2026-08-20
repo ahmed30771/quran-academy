@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, formatMoney } from "../api";
-import { audienceLabel, categoryLabel, coursePath, levelLabel, localized, startCourseTrial } from "../helpers";
+import { audienceLabel, categoryLabel, coursePath, levelLabel, localized } from "../helpers";
 import PageHero from "../components/PageHero";
 
 export default function Courses() {
@@ -12,7 +12,6 @@ export default function Courses() {
   const [audience, setAudience] = useState("all");
   const [category, setCategory] = useState("all");
   const [level, setLevel] = useState("all");
-  const [busyId, setBusyId] = useState("");
   const [trialIds, setTrialIds] = useState([]);
 
   useEffect(() => {
@@ -27,28 +26,22 @@ export default function Courses() {
     api("/api/courses/trial/me").then((d) => setTrialIds(d.courseIds || [])).catch(() => setTrialIds([]));
   }, [user]);
 
-  async function bookTrial(id) {
-    setBusyId(`trial-${id}`);
-    const res = await startCourseTrial({ nav, user, showToast, t, courseId: id });
-    if (res?.ok) setTrialIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
-    setBusyId("");
+  async function bookTrial(course) {
+    if (!user) return nav("/login");
+    if (user.role !== "student") {
+      showToast("Only student accounts can start a free trial.");
+      return;
+    }
+    nav(`${coursePath(course)}#choose-teacher`);
   }
 
-  async function enroll(id) {
+  async function enroll(course) {
     if (!user) return nav("/login");
     if (user.role !== "student") {
       showToast("Only student accounts can enroll.");
       return;
     }
-    try {
-      setBusyId(id);
-      const res = await api(`/api/courses/${id}/enroll`, { method: "POST", body: { plan: "standard" } });
-      showToast(res.already ? "You are already enrolled in this course." : `Enrollment request sent for ${res.course?.title || "this course"}.`);
-    } catch (e) {
-      showToast(e.message);
-    } finally {
-      setBusyId("");
-    }
+    nav(`${coursePath(course)}#choose-teacher`);
   }
 
   const shown = courses.filter((c) => {
@@ -63,7 +56,7 @@ export default function Courses() {
   return (
     <main>
       <PageHero kicker={t.coursesKicker} title={t.coursesTitle} lede={t.coursesLede} />
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section">
         <div className="wrap">
           <div className="filter-groups">
             <label>
@@ -116,14 +109,14 @@ export default function Courses() {
                 <p className="trial-note">{t.firstDayTrial}</p>
                 <div className="btn-row">
                   <Link className="btn btn-ghost btn-sm" to={coursePath(c)}>{t.viewCourse}</Link>
-                  <button className="btn btn-primary btn-sm" type="button" disabled={busyId === c.id} onClick={() => enroll(c.id)}>{busyId === c.id ? "..." : t.enroll}</button>
+                  <button className="btn btn-primary btn-sm" type="button" onClick={() => enroll(c)}>{t.enroll}</button>
                   <button
                     className="btn btn-gold btn-sm"
                     type="button"
-                    disabled={trialIds.includes(c.id) || busyId === `trial-${c.id}`}
-                    onClick={() => bookTrial(c.id)}
+                    disabled={trialIds.includes(c.id)}
+                    onClick={() => bookTrial(c)}
                   >
-                    {trialIds.includes(c.id) ? t.trialUsed : busyId === `trial-${c.id}` ? "..." : t.bookTrial}
+                    {trialIds.includes(c.id) ? t.trialUsed : t.bookTrial}
                   </button>
                 </div>
               </article>

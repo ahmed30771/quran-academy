@@ -16,7 +16,7 @@ export default function Blog() {
   return (
     <main>
       <PageHero kicker={t.blogKicker} title={t.blogTitle} lede={t.blogLede} />
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section">
         <div className="wrap grid-3">
           {posts.map((row) => {
             const p = localized(row, lang);
